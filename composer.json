@@ -1,0 +1,8 @@
+{
+    "name": "mohamed/testautoload",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
