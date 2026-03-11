@@ -2,16 +2,16 @@
 namespace App\models ;
 use App\core\Model ;
     class User extends  Model {
-        public int $id;
-        public string $name;
-        public string $email;
-        public string $password;
-        public string $role;
-        public ?int $roomId;
-        public ?string $extension;
-        public ?string $image;
-        public bool $isActive;
-        public string $createdAt;
+        // public int $id;
+        // public string $name;
+        // public string $email;
+        // public string $password;
+        // public string $role;
+        // public ?int $roomId;
+        // public ?string $extension;
+        // public ?string $image;
+        // public bool $isActive;
+        // public string $createdAt;
 
         public function __construct() {
             parent::__construct("users");
