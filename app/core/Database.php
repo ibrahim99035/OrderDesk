@@ -2,14 +2,15 @@
 namespace App\core ;
 use PDO;
 class Database{
-    private $host = "sql.freedb.tech";
-    private $username = "freedb_OrderDeskITI" ;
-    private $password = "c**?x3!GNV&tb37" ;
-    private $db_name = "freedb_OrderDesk" ;
+    private $host = DB_HOST;
+    private $username = DB_USER ;
+    private $password = DB_PASS;
+    private $db_name = DB_NAME ;
     public $conn ;
     private static $instance = null ;
 
     private function __construct(){
+      
         try {
             $this->conn = new PDO("mysql:host=$this->host;dbname=$this->db_name",$this->username,$this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
