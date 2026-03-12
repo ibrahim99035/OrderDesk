@@ -33,3 +33,6 @@ ehthumbs.db    # Windows
 
 # Session files
 /var/sessions/
+
+# VSC
+.vscode/
