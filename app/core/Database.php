@@ -1,6 +1,9 @@
 <?php
 namespace App\core ;
 use PDO;
+use PDOException;
+
+
 class Database{
     private $host = DB_HOST;
     private $username = DB_USER ;

@@ -3,7 +3,7 @@
 namespace App\core;
 
 use App\core\Database;
-use App\Fased\Insert;
+use App\Fased\insert ;
 use PDO;
 use PDOException;
 
@@ -83,7 +83,7 @@ class Model
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         } catch (PDOException $e) {
-            return false;
+            return $e;
         }
     }
 
