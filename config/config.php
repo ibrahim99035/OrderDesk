@@ -1,10 +1,10 @@
 <?php
 
 //Database
-define('DB_HOST',    'sql.freedb.tech');
-define('DB_NAME',    'freedb_OrderDesk');
-define('DB_USER',    'freedb_OrderDeskITI');
-define('DB_PASS',    'c**?x3!GNV&tb37');
+define('DB_HOST', getenv('DB_HOST'));
+define('DB_NAME', getenv('DB_NAME'));
+define('DB_USER', getenv('DB_USER'));
+define('DB_PASS', getenv('DB_PASS'));
 
 //Application
 define('BASE_URL',   '/cafeteria');
