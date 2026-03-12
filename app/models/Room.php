@@ -1,11 +1,10 @@
 <?php
-    class Room {
-        public int $id;
-        public string $roomNumber;
+namespace App\models;
+use App\core\Model;
 
-        public function __construct(array $row) {
-            $this->id         = $row['id'];
-            $this->roomNumber = $row['room_number'];
-        }
+class Room extends Model {
+    public function __construct() {
+        parent::__construct("rooms");
     }
+}
 ?>
