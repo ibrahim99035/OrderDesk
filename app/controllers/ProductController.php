@@ -65,12 +65,71 @@ class ProductController{
    public function delete($id){
 
 
-       $pro = new Product() ;
+      $pro = new Product() ;
       $proud = $pro->find($id) ;
       if($proud){
+         $pro->where("id=$id")->delete();
+         $_SESSION["success"] = "Data dleted sucsuful";
+         header("Location: /products");
+         
+      }else{
+        $_SESSION["errorsCreate"] = ["delete" => ["cant delete"]];
+         header("Location: /products");
+      }
+
+
+   }
+
+   public function update(string $id){
+
+      $request = new insert ;
+      $pro = new Product() ;
+      $proudect = $pro->find($id) ;
+      $_SESSION["old"] = $proudect ;
+
+      if(!$proudect){
+         $_SESSION["errorsupdate"] = "proudect not found";
+         header("Location: /products");
+      }
+
+      if(!$request->validate()){
+
+         $_SESSION["errorsupdate"] = $request->errors();
+         header("Location: /products");
 
       }else{
 
+            $image = $_FILES["image"] ;
+            if($image){
+            
+               $fileManger = new FileManager() ;
+               $fileManger->types([
+                  "image/jpg",
+                  "image/jpeg",
+                  "image/png",
+                  "image/webp",
+               ]);
+               $path = $fileManger->upload($image) ;
+            }else{
+               $path = $proudect->image;
+            }
+            if(!$path){
+               $_SESSION["errorsupdate"] = ["image" =>["image faild not valid only allwo jpg jpeg png webp "]];
+               header("Location: /products");
+            }
+            $data = $request->data() ;
+
+            $result = $pro->where("id=$id")->update(["name" , "description", "price" , "category_id"  ,"image" ,"is_available"] , 
+                           [$data["name"] ,$data["description"], $data["price"] , $data["category_id"], $path , $data["is_available"]]) ;
+            if($result){
+               $_SESSION["success"] = "Data updated sucsuful";
+               header("Location: /products");
+            }else{
+               $_SESSION["serverEror"] = ["server" =>["server error "]];
+               header("Location: /products");
+            }
       }
    }
+
+
 }
