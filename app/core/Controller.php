@@ -1,12 +1,18 @@
 <?php
-namespace App\Core;
-class Controller {
 
-    public function __construct() {
+namespace App\core;
+
+use App\core\Session;
+
+class Controller
+{
+    public function __construct()
+    {
         Session::start();
     }
 
-    protected function render(string $view, array $data = []): void {
+    protected function render(string $view, array $data = []): void
+    {
         extract($data);
         $viewFile = __DIR__ . "/../../views/{$view}.php";
 
@@ -15,15 +21,16 @@ class Controller {
             return;
         }
 
-        $headerFile = __DIR__ . "/../../views/partials/header.php";
-        $footerFile = __DIR__ . "/../../views/partials/footer.php";
+        $headerFile = __DIR__ . "/../../views/admin/layout/header.php";
+        $footerFile = __DIR__ . "/../../views/admin/layout/footer.php";
 
         require $headerFile;
         require $viewFile;
         require $footerFile;
     }
 
-    protected function renderPartial(string $view, array $data = []): void {
+    protected function renderAuth(string $view, array $data = []): void
+    {
         extract($data);
         $viewFile = __DIR__ . "/../../views/{$view}.php";
 
@@ -35,56 +42,84 @@ class Controller {
         require $viewFile;
     }
 
-    protected function redirect(string $path): void {
+    protected function renderPartial(string $view, array $data = []): void
+    {
+        extract($data);
+        $viewFile = __DIR__ . "/../../views/{$view}.php";
+
+        if (!file_exists($viewFile)) {
+            $this->abort(500, "View not found: {$view}");
+            return;
+        }
+
+        require $viewFile;
+    }
+
+    protected function redirect(string $path): void
+    {
         header("Location: " . BASE_URL . $path);
         exit;
     }
 
-    protected function requireAuth(): void {
+    protected function requireAuth(): void
+    {
         if (!Session::isLoggedIn()) {
             $this->redirect('/login');
         }
     }
 
-    protected function requireAdmin(): void {
+    protected function requireAdmin(): void
+    {
         $this->requireAuth();
         if (!Session::isAdmin()) {
-            $this->redirect('/');
+            $this->abort(403, '');
         }
     }
 
-    protected function isPost(): bool {
+    protected function isPost(): bool
+    {
         return $_SERVER['REQUEST_METHOD'] === 'POST';
     }
 
-    protected function isGet(): bool {
+    protected function isGet(): bool
+    {
         return $_SERVER['REQUEST_METHOD'] === 'GET';
     }
 
-    protected function post(string $key, mixed $default = null): mixed {
+    protected function post(string $key, mixed $default = null): mixed
+    {
         $value = $_POST[$key] ?? $default;
         return is_string($value) ? trim($value) : $value;
     }
 
-    protected function get(string $key, mixed $default = null): mixed {
+    protected function get(string $key, mixed $default = null): mixed
+    {
         $value = $_GET[$key] ?? $default;
         return is_string($value) ? trim($value) : $value;
     }
 
-    protected function currentPage(): int {
+    protected function currentPage(): int
+    {
         return max(1, (int) $this->get('page', 1));
     }
 
-    protected function abort(int $code, string $message = ''): void {
+    protected function abort(int $code, string $message = ''): void
+    {
         http_response_code($code);
-        echo $message;
+        $viewFile = __DIR__ . "/../../views/{$code}.php";
+        if (file_exists($viewFile)) {
+            require $viewFile;
+        } else {
+            echo $message;
+        }
         exit;
     }
 
-    protected function currentUser(): array {
+    protected function currentUser(): array
+    {
         return [
             'id'   => Session::get('user_id'),
-            'name' => Session::get('user_name'),
+            'name' => Session::get('name'),
             'role' => Session::get('role'),
         ];
     }

@@ -1,0 +1,2230 @@
+]633;E;for file in schema.sql index.php routes.php app/controllers/AuthController.php app/Middleware/AuthMiddleware.php app/core/Session.php app/core/Route.php app/core/Controller.php app/core/Model.php app/core/Database.php app/models/User.php app/repositories/UserRepository.php app/controllers/ProductController.php app/repositories/ProductRepository.php app/models/Product.php config/config.php views/auth/login.php views/admin/users.php views/admin/user_form.php views/partials/header.php views/partials/nav_admin.php views/partials/nav_user.php views/admin/layout/header.php views/admin/layout/footer.php;2bf0f97f-1939-413e-9381-598e5179acf0]633;C========================================
+FILE: schema.sql
+========================================
+CREATE TABLE rooms (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    room_number VARCHAR(20) NOT NULL UNIQUE
+);
+
+CREATE TABLE users (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(100)         NOT NULL,
+    email       VARCHAR(150)         NOT NULL UNIQUE,
+    password    VARCHAR(255)         NOT NULL,
+    role        ENUM('user','admin') NOT NULL DEFAULT 'user',
+    room_id     INT UNSIGNED,
+    extension   VARCHAR(20),
+    image       VARCHAR(255),
+    is_active  BOOLEAN               NOT NULL DEFAULT TRUE,
+    created_at  DATETIME             NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (room_id) REFERENCES rooms(id)
+);
+
+CREATE TABLE categories (
+    id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name  VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE products (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name          VARCHAR(100)  NOT NULL,
+    description          VARCHAR(100)  NOT NULL,
+
+    price         DECIMAL(10,2) NOT NULL,
+    category_id   INT UNSIGNED,
+    image         VARCHAR(255),
+    is_available  TINYINT(1)    NOT NULL DEFAULT 1,
+    created_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+);
+
+CREATE TABLE orders (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT UNSIGNED    NOT NULL,
+    placed_by   INT UNSIGNED    NOT NULL,
+    room_id     INT UNSIGNED    NOT NULL,
+    notes       TEXT,
+    status      ENUM('processing','out_for_delivery','done','cancelled')
+                                NOT NULL DEFAULT 'processing',
+    total       DECIMAL(10,2)   NOT NULL DEFAULT 0.00,
+    created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME        ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id)   REFERENCES users(id),
+    FOREIGN KEY (placed_by) REFERENCES users(id),
+    FOREIGN KEY (room_id)   REFERENCES rooms(id)
+);
+
+CREATE TABLE order_items (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id    INT UNSIGNED   NOT NULL,
+    product_id  INT UNSIGNED   NOT NULL,
+    quantity    INT UNSIGNED   NOT NULL DEFAULT 1,
+    unit_price  DECIMAL(10,2)  NOT NULL,
+
+    FOREIGN KEY (order_id)   REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+========================================
+FILE: index.php
+========================================
+<?php
+require "handel.errors.php";
+require __DIR__ . "/vendor/autoload.php";
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+require __DIR__ . "/config/config.php";
+use App\core\Session ;
+$session = new Session ;
+$session->start() ;
+if (preg_match('#^/public/#', $_SERVER["REQUEST_URI"])) {
+    return false;
+}
+
+require __DIR__ . "/routes.php";
+
+
+\App\core\Route::dispatch();
+========================================
+FILE: routes.php
+========================================
+<?php
+
+use App\core\Route;
+use App\controllers\AuthController;
+use App\controllers\UserController;
+use App\controllers\ProductController;
+use App\controllers\categoryController ;
+
+// Authentication
+Route::get("/", [AuthController::class, 'showLogin']);
+Route::get("/login", [AuthController::class, 'showLogin']);
+Route::post("/login", [AuthController::class, 'login']);
+Route::get("/logout", [AuthController::class, 'logout']);
+
+//Home (after login)
+// Route::get("/admin/home", [HomeController::class, 'admin']);
+// Route::get("/home", [HomeController::class, 'user']);
+
+// User management (Admin)
+Route::get("admin/users", [UserController::class, 'index']);
+Route::post("admin/users/store", [UserController::class, 'store']);
+Route::post("admin/users/update", [UserController::class, 'update']);
+Route::post("admin/users/delete", [UserController::class, 'delete']);
+
+// Products (Admin)
+Route::get("products" , [ProductController::class , "index"]) ;
+Route::post("products" , [ProductController::class , "store"]) ;
+Route::post("products/delete/{id}" , [ProductController::class , "delete"]) ;
+Route::post("products/update/{id}" , [ProductController::class , "update"]) ;
+Route::get("/products/toggle/{id}" , [ProductController::class , "toggle"]) ;
+
+// categories (admin)
+
+Route::get("admin/categories" , [categoryController::class , "index"]) ;
+Route::post("admin/categories" , [categoryController::class , "store"]) ;
+Route::post("admin/categories/delete/{id}" , [categoryController::class , "delete"]) ;
+Route::post("admin/categories/update/{id}" , [categoryController::class , "update"]) ;
+
+
+
+
+
+========================================
+FILE: app/controllers/AuthController.php
+========================================
+<?php
+
+namespace App\controllers;
+
+use App\core\Session;
+use App\core\View;
+use App\repositories\UserRepository;
+
+class AuthController
+{
+    private UserRepository $userRepo;
+
+    public function __construct()
+    {
+        $this->userRepo = new UserRepository();
+    }
+
+    public function showLogin()
+    {
+        if (Session::isLoggedIn()) {
+            $this->redirectByRole();
+            return;
+        }
+
+        View::make('auth.login');
+    }
+
+    public function login()
+    {
+        $email    = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if (empty($email) || empty($password)) {
+            View::make('auth.login', ['error' => 'Email and password are required.']);
+            return;
+        }
+
+        $user = $this->userRepo->findByEmail($email);
+
+        if (!$user || !password_verify($password, $user['password'])) {
+            View::make('auth.login', ['error' => 'Invalid email or password.']);
+            return;
+        }
+
+        Session::set('user_id', $user['id']);
+        Session::set('role',    $user['role']);
+        Session::set('name',    $user['name']);
+
+        $this->redirectByRole();
+    }
+
+    public function logout()
+    {
+        Session::destroy();
+        header('Location: /login');
+        exit;
+    }
+
+    private function redirectByRole(): void
+    {
+        if (Session::isAdmin()) {
+            header('Location: /admin/home');
+        } else {
+            header('Location: /home');
+        }
+        exit;
+    }
+}
+========================================
+FILE: app/Middleware/AuthMiddleware.php
+========================================
+<?php
+
+namespace App\Middleware;
+
+class AuthMiddleware
+{
+    public static function handle()
+    {
+        if(!isset($_SESSION['user'])){
+            echo "Unauthorized";
+            exit;
+        }else{
+            echo "hello" ;
+        }
+    }
+}
+========================================
+FILE: app/core/Session.php
+========================================
+<?php
+namespace App\core ;
+class Session {
+    public static function start(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+    }
+
+    public static function set(string $key, mixed $value): void {
+        $_SESSION[$key] = $value;
+    }
+
+    public static function get(string $key): mixed {
+        return $_SESSION[$key] ?? null;
+    }
+
+    public static function destroy(): void {
+        session_destroy();
+    }
+
+    public static function isLoggedIn(): bool {
+        return isset($_SESSION['user_id']);
+    }
+
+    public static function isAdmin(): bool {
+        return ($_SESSION['role'] ?? '') === 'admin';
+    }
+}
+========================================
+FILE: app/core/Route.php
+========================================
+<?php
+
+namespace App\core;
+
+use App\core\View;
+
+class Route
+{
+    private static array $routes = [];
+
+    public static function add($method,$uri,$action)
+    {
+        $uri = trim($uri,'/');
+        $uri = $uri ? "/$uri" : "/";
+
+        self::$routes[$method][] = [
+            'uri'=>$uri,
+            'action'=>$action
+        ];
+    }
+
+    public static function get($uri,$action)
+    {
+        self::add('GET',$uri,$action);
+    }
+
+    public static function post($uri,$action)
+    {
+        self::add('POST',$uri,$action);
+    }
+
+    public static function put($uri,$action)
+    {
+        self::add('PUT',$uri,$action);
+    }
+
+    public static function delete($uri,$action)
+    {
+        self::add('DELETE',$uri,$action);
+    }
+
+    public static function patch($uri,$action)
+    {
+        self::add('PATCH',$uri,$action);
+    }
+
+    public static function dispatch()
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+
+        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+        // Normalize to always include a leading slash and no trailing slash.
+        $uri = trim($uri, '/');
+        $uri = $uri ? "/$uri" : "/";
+
+        // Support running the app under a subdirectory (e.g. /apps/OrderDesk or /cafeteria).
+        // Strip out the base prefix automatically so routes stay the same.
+        $bases = [];
+        if (defined('BASE_URL')) {
+            $bases[] = rtrim(BASE_URL, '/');
+        }
+        $bases[] = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+
+        foreach (array_unique($bases) as $basePath) {
+            if ($basePath !== '' && $basePath !== '/' && str_starts_with($uri, $basePath)) {
+                $uri = substr($uri, strlen($basePath));
+                $uri = trim($uri, '/');
+                $uri = $uri ? "/$uri" : "/";
+                break;
+            }
+        }
+
+        if(!isset(self::$routes[$method])){
+            echo "404 Route Not Found";
+            return;
+        }
+
+        foreach(self::$routes[$method] as $route){
+
+            $pattern = preg_replace(
+                '#\{([a-zA-Z0-9_]+)\}#',
+                '([^/]+)',
+                $route['uri']
+            );
+
+            $pattern = "#^" . $pattern . "$#";
+
+            if(preg_match($pattern,$uri,$matches)){
+
+                array_shift($matches);
+
+                [$controller,$function] = $route['action'];
+
+                $controller = new $controller;
+
+                $controller->$function(...$matches);
+
+                return;
+            }
+        }
+
+       View::make("404") ;
+    }
+}
+========================================
+FILE: app/core/Controller.php
+========================================
+<?php
+namespace App\Core;
+class Controller {
+
+    public function __construct() {
+        Session::start();
+    }
+
+    protected function render(string $view, array $data = []): void {
+        extract($data);
+        $viewFile = __DIR__ . "/../../views/{$view}.php";
+
+        if (!file_exists($viewFile)) {
+            $this->abort(500, "View not found: {$view}");
+            return;
+        }
+
+        $headerFile = __DIR__ . "/../../views/partials/header.php";
+        $footerFile = __DIR__ . "/../../views/partials/footer.php";
+
+        require $headerFile;
+        require $viewFile;
+        require $footerFile;
+    }
+
+    protected function renderPartial(string $view, array $data = []): void {
+        extract($data);
+        $viewFile = __DIR__ . "/../../views/{$view}.php";
+
+        if (!file_exists($viewFile)) {
+            $this->abort(500, "View not found: {$view}");
+            return;
+        }
+
+        require $viewFile;
+    }
+
+    protected function redirect(string $path): void {
+        header("Location: " . BASE_URL . $path);
+        exit;
+    }
+
+    protected function requireAuth(): void {
+        if (!Session::isLoggedIn()) {
+            $this->redirect('/login');
+        }
+    }
+
+    protected function requireAdmin(): void {
+        $this->requireAuth();
+        if (!Session::isAdmin()) {
+            $this->redirect('/');
+        }
+    }
+
+    protected function isPost(): bool {
+        return $_SERVER['REQUEST_METHOD'] === 'POST';
+    }
+
+    protected function isGet(): bool {
+        return $_SERVER['REQUEST_METHOD'] === 'GET';
+    }
+
+    protected function post(string $key, mixed $default = null): mixed {
+        $value = $_POST[$key] ?? $default;
+        return is_string($value) ? trim($value) : $value;
+    }
+
+    protected function get(string $key, mixed $default = null): mixed {
+        $value = $_GET[$key] ?? $default;
+        return is_string($value) ? trim($value) : $value;
+    }
+
+    protected function currentPage(): int {
+        return max(1, (int) $this->get('page', 1));
+    }
+
+    protected function abort(int $code, string $message = ''): void {
+        http_response_code($code);
+        echo $message;
+        exit;
+    }
+
+    protected function currentUser(): array {
+        return [
+            'id'   => Session::get('user_id'),
+            'name' => Session::get('user_name'),
+            'role' => Session::get('role'),
+        ];
+    }
+}
+========================================
+FILE: app/core/Model.php
+========================================
+<?php
+
+namespace App\core;
+
+use App\core\Database;
+use App\Fased\insert ;
+use PDO;
+use PDOException;
+
+class Model
+{
+    public $table;
+
+    private ?string $condition = null;
+    protected ?string $groupBy = null;
+    protected ?string $orderBy = null;
+    protected ?int $limit = null;
+
+    public function __construct($table)
+    {
+        $this->table = $table;
+    }
+
+    public function insert($columns, $values)
+    {
+        $insert = new Insert($this->table, $columns, $values);
+        return $insert->insert();
+    }
+
+    public function where($condition)
+    {
+        $this->condition = $condition;
+        return $this;
+    }
+
+    public function orWhere($condition)
+    {
+        if (!$this->condition) {
+            $this->condition = $condition;
+        } else {
+            $this->condition .= " OR $condition";
+        }
+
+        return $this;
+    }
+
+    public function andWhere($condition)
+    {
+        if (!$this->condition) {
+            $this->condition = $condition;
+        } else {
+            $this->condition .= " AND $condition";
+        }
+
+        return $this;
+    }
+
+    public function delete()
+    {
+        $conn = Database::getConnection();
+
+        $sql = "DELETE FROM $this->table WHERE $this->condition";
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            return $stmt->rowCount();
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function all()
+    {
+        $conn = Database::getConnection();
+
+        $sql = "SELECT * FROM $this->table";
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            return $e;
+        }
+    }
+
+    public function update($columns, $values)
+    {
+        $conn = Database::getConnection();
+
+        $set = [];
+
+        foreach ($columns as $col) {
+            $set[] = "$col = ?";
+        }
+
+        $setString = implode(", ", $set);
+
+        $sql = "UPDATE {$this->table} SET $setString WHERE {$this->condition}";
+
+        try {
+
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($values);
+
+            return $stmt->rowCount();
+
+        } catch (PDOException $e) {
+            var_dump($e->getMessage());
+            return false;
+        }
+    }
+
+    public function find($id)
+    {
+        $conn = Database::getConnection();
+
+        $sql = "SELECT * FROM $this->table WHERE id = $id";
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function limit($number)
+    {
+        $this->limit = $number;
+        return $this;
+    }
+
+    public function groupBy($column)
+    {
+        $this->groupBy = $column;
+        return $this;
+    }
+
+    public function orderBy($column, $order = "ASC")
+    {
+        $this->orderBy = "$column $order";
+        return $this;
+    }
+
+    public function get()
+    {
+        $conn = Database::getConnection();
+
+        $sql = "SELECT * FROM $this->table";
+
+        if ($this->condition) {
+            $sql .= " WHERE $this->condition";
+        }
+
+        if ($this->groupBy) {
+            $sql .= " GROUP BY $this->groupBy";
+        }
+
+        if ($this->orderBy) {
+            $sql .= " ORDER BY $this->orderBy";
+        }
+
+        if ($this->limit) {
+            $sql .= " LIMIT $this->limit";
+        }
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function first()
+    {
+        $conn = Database::getConnection();
+
+        $sql = "SELECT * FROM $this->table";
+
+        if ($this->condition) {
+            $sql .= " WHERE $this->condition";
+        }
+
+        if ($this->groupBy) {
+            $sql .= " GROUP BY $this->groupBy";
+        }
+
+        if ($this->orderBy) {
+            $sql .= " ORDER BY $this->orderBy";
+        }
+
+        $sql .= " LIMIT 1";
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function count()
+    {
+        $conn = Database::getConnection();
+
+        $sql = "SELECT COUNT(*) as count FROM $this->table";
+
+        if ($this->condition) {
+            $sql .= " WHERE $this->condition";
+        }
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            return $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
+        } catch (PDOException $e) {
+            return $e;
+        }
+    }
+
+    public function paginate($perPage, $page)
+    {
+        $conn = Database::getConnection();
+
+        $sql = "SELECT * FROM $this->table";
+
+        if ($this->condition) {
+            $sql .= " WHERE $this->condition";
+        }
+
+        if ($this->orderBy) {
+            $sql .= " ORDER BY $this->orderBy";
+        }
+
+        $offset = ($page - 1) * $perPage;
+
+        $sql .= " LIMIT $perPage OFFSET $offset";
+
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    public function paginateLinks($perPage, $page)
+    {
+        $total = $this->count();
+
+        $totalPages = ceil($total / $perPage);
+
+        $links = "";
+
+        for ($i = 1; $i <= $totalPages; $i++) {
+
+            if ($i == $page) {
+                $links .= "<a href='?page=$i' class='active'>$i</a>";
+            } else {
+                $links .= "<a href='?page=$i'>$i</a>";
+            }
+        }
+
+        return $links;
+    }
+
+    public function __destruct()
+    {
+        $this->condition = null;
+        $this->groupBy = null;
+        $this->orderBy = null;
+        $this->limit = null;
+    }
+}
+========================================
+FILE: app/core/Database.php
+========================================
+<?php
+namespace App\core ;
+use PDO;
+use PDOException;
+
+
+class Database{
+    private $host;
+    private $username;
+    private $password;
+    private $db_name;
+    public $conn ;
+    private static $instance = null ;
+
+    private function __construct(){
+      
+        try {
+            $this->host = $_ENV["DB_HOST"];
+            $this->username = $_ENV["DB_USER"];
+            $this->password = $_ENV["DB_PASS"];
+            $this->db_name = $_ENV["DB_NAME"];
+            $this->conn = new PDO("mysql:host=$this->host;dbname=$this->db_name",$this->username,$this->password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            echo "Connection failed: " . $e->getMessage();
+        }
+    }
+
+    public static function getConnection(){
+      
+        if(self::$instance === null){
+            self::$instance = new Database() ;
+        }
+        return self::$instance->conn ;
+    }
+}
+========================================
+FILE: app/models/User.php
+========================================
+<?php
+namespace App\models ;
+use App\core\Model ;
+    class User extends  Model {
+
+        public function __construct() {
+            parent::__construct("users");
+        }
+    }
+?>
+========================================
+FILE: app/repositories/UserRepository.php
+========================================
+<?php
+
+namespace App\repositories;
+
+use App\models\User;
+use App\core\Database;
+use PDO;
+
+class UserRepository extends User
+{
+    public function findByEmail(string $email): array|false
+    {
+        return $this->where("email = '$email'")->first();
+    }
+
+    public function createUser(array $data): int|false
+    {
+        return $this->insert(
+            ['name', 'email', 'password', 'role', 'room_id', 'extension', 'image', 'is_active'],
+            [
+                $data['name'],
+                $data['email'],
+                $data['password'],
+                $data['role'],
+                $data['room_id']   ?: null,
+                $data['extension'] ?: null,
+                $data['image']     ?: null,
+                $data['is_active'],
+            ]
+        );
+    }
+
+    // JOIN with rooms to get room_number alongside each user
+    public function allWithRoom(): array
+    {
+        $conn = Database::getConnection();
+        $sql  = "SELECT u.*, r.room_number
+                 FROM users u
+                 LEFT JOIN rooms r ON u.room_id = r.id
+                 ORDER BY u.created_at DESC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function findWithRoom(int $id): array|false
+    {
+        $conn = Database::getConnection();
+        $sql  = "SELECT u.*, r.room_number
+                 FROM users u
+                 LEFT JOIN rooms r ON u.room_id = r.id
+                 WHERE u.id = $id
+                 LIMIT 1";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+}
+========================================
+FILE: app/controllers/ProductController.php
+========================================
+<?php
+namespace App\controllers ;
+use App\core\View ;
+use App\models\Product ;
+use App\request\proudects\insert ;
+use App\core\FileManager ;
+use App\models\Category;
+
+class ProductController{
+
+
+   public function index(){
+
+    
+    $pro = new Product() ;
+    $catgory = new Category ;
+     $proudects = $pro->all() ;
+     $catgroies =  $catgory->all() ;
+     View::make("admin.products" , ["proudects" => $proudects,"catgroies" => $catgroies , "current" => 'proudects' ]);
+
+
+   }
+
+   public function store(){
+
+
+      $request = new insert ;
+      $pro = new Product() ;
+
+      if(!$request->validate()){
+
+         $_SESSION["errorsCreate"] = $request->errors();
+         header("Location: /products");
+
+      }else{
+
+            $image = $_FILES["image"] ;
+            var_dump($image) ;
+            $fileManger = new FileManager() ;
+            $fileManger->types([
+               "image/jpg",
+               "image/jpeg",
+               "image/png",
+               "image/webp",
+            ]);
+            $path = $fileManger->upload($image) ;
+            if(!$path){
+               $_SESSION["errorsCreate"] = ["image" =>["image faild not valid only allwo jpg jpeg png webp "]];
+               header("Location: /products");
+            }
+            $data = $request->data() ;
+
+            $result = $pro->insert(["name" , "description", "price" , "category_id"  ,"image" ,"is_available"] , 
+                           [$data["name"] ,$data["description"], $data["price"] , $data["category_id"], $path , $data["is_available"]]) ;
+            if($result){
+               $_SESSION["success"] = "Data added sucsuful";
+               header("Location: /products");
+            }else{
+               $_SESSION["error"] = ["image" =>["image faild not valid only allwo jpg jpeg png webp "]];
+               header("Location: /products");
+            }
+      }
+   }
+
+   public function delete($id){
+
+
+      $pro = new Product() ;
+      $proud = $pro->find($id) ;
+      $file = new FileManager() ;
+      if($proud){
+         $file->delete($proud["image"]) ;
+         $pro->where("id=$id")->delete();
+      
+         $_SESSION["success"] = "Data dleted sucsuful";
+         header("Location: /products");
+         
+      }else{
+        $_SESSION["errorsCreate"] = ["delete" => ["cant delete"]];
+         header("Location: /products");
+      }
+
+
+   }
+
+   public function update(string $id){
+
+      $request = new insert ;
+      $pro = new Product() ;
+      $proudect = $pro->find($id) ;
+      $_SESSION["old"] = $proudect ;
+
+      if(!$proudect){
+         $_SESSION["errorsupdate"] = "proudect not found";
+         header("Location: /products");
+      }
+
+      if(!$request->validate()){
+
+         $_SESSION["errorsupdate"] = $request->errors();
+         header("Location: /products");
+         $oldImag = null ;
+
+      }else{
+
+            $image = $_FILES["image"] ;
+            if($image){
+            
+               $fileManger = new FileManager() ;
+               $fileManger->types([
+                  "image/jpg",
+                  "image/jpeg",
+                  "image/png",
+                  "image/webp",
+               ]);
+               $path = $fileManger->upload($image) ;
+               $oldImag = $proudect["image"] ;
+               
+            }else{
+               $path = $proudect->image;
+            }
+            if(!$path){
+               $_SESSION["errorsupdate"] = ["image" =>["image faild not valid only allwo jpg jpeg png webp "]];
+               header("Location: /products");
+            }
+            $data = $request->data() ;
+
+            $result = $pro->where("id=$id")->update(["name" , "description", "price" , "category_id"  ,"image" ,"is_available"] , 
+                           [$data["name"] ,$data["description"], $data["price"] , $data["category_id"], $path , $data["is_available"]]) ;
+            if($result){
+               $file = new FileManager() ;
+               $file->delete($oldImag) ;
+               $_SESSION["success"] = "Data updated sucsuful";
+               header("Location: /products");
+            }else{
+               $_SESSION["error"] = ["server" =>["server error "]];
+               header("Location: /products");
+            }
+      }
+   }
+
+   public function toggle($id){
+      $pro = new Product() ;
+      $proudect = $pro->find($id) ;
+      if($proudect){
+         $pro->where("id=$id")->update(["is_available"]  ,[!$proudect["is_available"]? 1 : 0]) ;
+      }
+       header("Location: /products");
+   }
+
+
+}
+========================================
+FILE: app/repositories/ProductRepository.php
+========================================
+
+========================================
+FILE: app/models/Product.php
+========================================
+<?php
+namespace App\models ;
+
+use App\core\Model;
+
+class Product extends Model {
+
+
+        public function __construct() {
+            parent::__construct("products") ;
+        }
+    }
+?>
+========================================
+FILE: config/config.php
+========================================
+<?php
+
+//Database
+define('DB_HOST', getenv('DB_HOST'));
+define('DB_NAME', getenv('DB_NAME'));
+define('DB_USER', getenv('DB_USER'));
+define('DB_PASS', getenv('DB_PASS'));
+
+//Application
+define('BASE_URL',   '/cafeteria');
+define('APP_NAME',   'Cafeteria');
+
+//File Uploads
+define('UPLOAD_PATH',         __DIR__ . '/../public/uploads/');
+define('PRODUCT_UPLOAD_PATH', UPLOAD_PATH . 'products/');
+define('USER_UPLOAD_PATH',    UPLOAD_PATH . 'users/');
+
+define('UPLOAD_URL',          BASE_URL . '/public/uploads/');
+define('PRODUCT_UPLOAD_URL',  UPLOAD_URL . 'products/');
+define('USER_UPLOAD_URL',     UPLOAD_URL . 'users/');
+
+define('MAX_UPLOAD_SIZE',     2 * 1024 * 1024); // 2MB in bytes
+define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
+
+//Pagination
+define('ITEMS_PER_PAGE', 10);
+
+//Order Status
+define('STATUS_PROCESSING',        'processing');
+define('STATUS_OUT_FOR_DELIVERY',  'out_for_delivery');
+define('STATUS_DONE',              'done');
+define('STATUS_CANCELLED',         'cancelled');
+
+//Roles
+define('ROLE_USER',  'user');
+define('ROLE_ADMIN', 'admin');
+
+//Error Reporting (set to 0 in production)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+========================================
+FILE: views/auth/login.php
+========================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        syne: ['Syne', 'sans-serif'],
+                        mono: ['DM Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="font-mono bg-neutral-950 text-neutral-100 min-h-screen flex items-center justify-center">
+
+    <div class="w-full max-w-md px-6">
+
+        <div class="border border-neutral-800 bg-neutral-900 p-10 relative">
+
+            <!-- Accent top line -->
+            <div class="absolute top-0 left-0 right-0 h-0.5 bg-lime-300"></div>
+
+            <p class="text-lime-300 text-xs tracking-widest uppercase mb-3">Admin Panel</p>
+            <h1 class="font-syne font-extrabold text-3xl mb-8">Sign In</h1>
+
+            <?php if (!empty($error)): ?>
+                <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 mb-6 tracking-wide">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" action="<?= BASE_URL ?>/login" class="space-y-5">
+
+                <div class="flex flex-col gap-2">
+                    <label for="email" class="text-neutral-500 text-xs tracking-widest uppercase">Email</label>
+                    <input
+                        type="email" id="email" name="email"
+                        value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                        placeholder="you@example.com"
+                        required autofocus
+                        class="bg-neutral-950 border border-neutral-800 text-neutral-100 font-mono text-sm px-4 py-3 outline-none focus:border-lime-300 transition-colors placeholder:text-neutral-700"
+                    >
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="password" class="text-neutral-500 text-xs tracking-widest uppercase">Password</label>
+                    <input
+                        type="password" id="password" name="password"
+                        placeholder="••••••••"
+                        required
+                        class="bg-neutral-950 border border-neutral-800 text-neutral-100 font-mono text-sm px-4 py-3 outline-none focus:border-lime-300 transition-colors placeholder:text-neutral-700"
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="w-full bg-lime-300 text-neutral-950 font-syne font-bold text-xs tracking-widest uppercase py-3.5 mt-2 hover:bg-lime-200 active:scale-[.99] transition-all"
+                >
+                    Enter →
+                </button>
+
+            </form>
+
+            <p class="mt-8 text-xs text-neutral-600 text-center tracking-wide">
+                Restricted access — authorised personnel only
+            </p>
+
+        </div>
+    </div>
+
+</body>
+</html>
+========================================
+FILE: views/admin/users.php
+========================================
+<?php include "layout/header.php" ; ?>
+
+<div class="min-h-screen bg-neutral-950 text-neutral-100 font-mono">
+<div class="max-w-6xl mx-auto px-6 py-12">
+
+    <!-- Page Header -->
+    <div class="flex items-end justify-between mb-10 flex-wrap gap-4">
+        <div>
+            <p class="text-lime-300 text-xs tracking-widest uppercase mb-2">Admin / Users</p>
+            <h1 class="font-syne font-extrabold text-4xl">
+                Users <span class="text-neutral-600">(<?= count($users) ?>)</span>
+            </h1>
+        </div>
+        <button
+            onclick="openModal('createModal')"
+            class="bg-lime-300 text-neutral-950 font-syne font-bold text-xs tracking-widest uppercase px-5 py-3 hover:bg-lime-200 active:scale-[.99] transition-all"
+        >
+            + New User
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="border border-neutral-800 overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+            <thead class="bg-neutral-900 border-b border-neutral-800">
+                <tr>
+                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">User</th>
+                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Email</th>
+                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Room</th>
+                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Ext.</th>
+                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Role</th>
+                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Status</th>
+                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Joined</th>
+                    <th class="px-4 py-4 text-right text-xs text-neutral-500 tracking-widest uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-800/60">
+                <?php if (empty($users)): ?>
+                    <tr>
+                        <td colspan="8" class="px-4 py-10 text-center text-neutral-600 text-xs tracking-wide">
+                            No users found.
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($users as $user): ?>
+                    <tr class="hover:bg-neutral-900/50 transition-colors">
+
+                        <!-- Avatar + Name -->
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <?php if (!empty($user['image'])): ?>
+                                    <img src="/public/uploads/users/<?= htmlspecialchars($user['image']) ?>"
+                                         class="w-8 h-8 rounded-full object-cover border border-neutral-700" alt="">
+                                <?php else: ?>
+                                    <div class="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-xs text-neutral-500 font-syne font-bold">
+                                        <?= strtoupper(substr($user['name'], 0, 1)) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <span class="font-medium text-neutral-100"><?= htmlspecialchars($user['name']) ?></span>
+                            </div>
+                        </td>
+
+                        <td class="px-4 py-3 text-neutral-400"><?= htmlspecialchars($user['email']) ?></td>
+
+                        <td class="px-4 py-3 text-neutral-400">
+                            <?= !empty($user['room_number']) ? htmlspecialchars($user['room_number']) : '<span class="text-neutral-700">—</span>' ?>
+                        </td>
+
+                        <td class="px-4 py-3 text-neutral-400">
+                            <?= !empty($user['extension']) ? htmlspecialchars($user['extension']) : '<span class="text-neutral-700">—</span>' ?>
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <?php if ($user['role'] === 'admin'): ?>
+                                <span class="bg-lime-300/10 text-lime-300 border border-lime-300/20 text-xs px-2 py-1 tracking-widest uppercase">Admin</span>
+                            <?php else: ?>
+                                <span class="bg-neutral-800 text-neutral-400 text-xs px-2 py-1 tracking-widest uppercase">User</span>
+                            <?php endif; ?>
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <?php if ($user['is_active']): ?>
+                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2 py-1 tracking-widest uppercase">Active</span>
+                            <?php else: ?>
+                                <span class="bg-red-500/10 text-red-400 border border-red-500/20 text-xs px-2 py-1 tracking-widest uppercase">Inactive</span>
+                            <?php endif; ?>
+                        </td>
+
+                        <td class="px-4 py-3 text-neutral-500 text-xs">
+                            <?= date('d M Y', strtotime($user['created_at'])) ?>
+                        </td>
+
+                        <td class="px-4 py-3 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button
+                                    onclick='openEditModal(<?= json_encode($user) ?>)'
+                                    class="border border-neutral-700 text-neutral-300 font-syne font-bold text-xs tracking-widest uppercase px-3 py-2 hover:border-neutral-400 hover:text-white transition-all"
+                                >Edit</button>
+
+                                <?php if ((int)$user['id'] !== (int)\App\core\Session::get('user_id')): ?>
+                                <button
+                                    onclick='openDeleteModal(<?= $user["id"] ?>, <?= json_encode($user["name"]) ?>)'
+                                    class="border border-red-500/30 text-red-400 font-syne font-bold text-xs tracking-widest uppercase px-3 py-2 hover:bg-red-500/10 transition-all"
+                                >Delete</button>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SHARED FIELD MACRO (PHP helper to avoid duplication)
+════════════════════════════════════════════════════════ -->
+<?php
+// Builds a reusable rooms <select> to avoid repeating the PHP loop twice
+function roomOptions(array $rooms, $selectedId = null): string {
+    $html = '<option value="">— No Room —</option>';
+    foreach ($rooms as $r) {
+        $sel   = (int)$r['id'] === (int)$selectedId ? 'selected' : '';
+        $html .= "<option value=\"{$r['id']}\" $sel>" . htmlspecialchars($r['room_number']) . "</option>";
+    }
+    return $html;
+}
+
+$inputCls  = "bg-neutral-950 border border-neutral-800 text-neutral-100 font-mono text-sm px-4 py-3 outline-none focus:border-lime-300 transition-colors placeholder:text-neutral-700 w-full";
+$labelCls  = "text-neutral-500 text-xs tracking-widest uppercase mb-2 block";
+$fieldCls  = "flex flex-col";
+?>
+
+
+<!-- ═══════════════════════════════════════════
+     CREATE MODAL
+════════════════════════════════════════════ -->
+<div id="createModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal('createModal')"></div>
+
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-neutral-900 border-l border-neutral-800 flex flex-col translate-x-full transition-transform duration-300" id="createPanel">
+        <div class="h-0.5 bg-lime-300"></div>
+
+        <div class="flex items-center justify-between px-8 py-5 border-b border-neutral-800">
+            <div>
+                <p class="text-lime-300 text-xs tracking-widest uppercase mb-1">Users</p>
+                <h2 class="font-syne font-bold text-xl">New User</h2>
+            </div>
+            <button onclick="closeModal('createModal')" class="text-neutral-500 hover:text-white text-xl transition-colors">✕</button>
+        </div>
+
+        <form method="POST" action="/admin/users/store" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-y-auto">
+            <div class="px-8 py-6 space-y-5 flex-1">
+
+                <?php if (!empty($createErrors)): ?>
+                    <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 tracking-wide space-y-1">
+                        <?php foreach ($createErrors as $e): ?>
+                            <div>— <?= htmlspecialchars($e) ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Name -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Name <span class="text-red-400">*</span></label>
+                    <input type="text" name="name" placeholder="Full name"
+                           value="<?= htmlspecialchars($createOld['name'] ?? '') ?>"
+                           class="<?= $inputCls ?>">
+                </div>
+
+                <!-- Email -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Email <span class="text-red-400">*</span></label>
+                    <input type="email" name="email" placeholder="user@example.com"
+                           value="<?= htmlspecialchars($createOld['email'] ?? '') ?>"
+                           class="<?= $inputCls ?>">
+                </div>
+
+                <!-- Password -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Password <span class="text-red-400">*</span></label>
+                    <input type="password" name="password" placeholder="Min. 8 characters"
+                           class="<?= $inputCls ?>">
+                </div>
+
+                <!-- Role + Room (2 cols) -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="<?= $fieldCls ?>">
+                        <label class="<?= $labelCls ?>">Role</label>
+                        <select name="role" class="<?= $inputCls ?>">
+                            <option value="user"  <?= ($createOld['role'] ?? '') === 'user'  ? 'selected' : '' ?>>User</option>
+                            <option value="admin" <?= ($createOld['role'] ?? '') === 'admin' ? 'selected' : '' ?>>Admin</option>
+                        </select>
+                    </div>
+                    <div class="<?= $fieldCls ?>">
+                        <label class="<?= $labelCls ?>">Room</label>
+                        <select name="room_id" class="<?= $inputCls ?>">
+                            <?= roomOptions($rooms, $createOld['room_id'] ?? null) ?>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Extension -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Extension</label>
+                    <input type="text" name="extension" placeholder="e.g. 101"
+                           value="<?= htmlspecialchars($createOld['extension'] ?? '') ?>"
+                           class="<?= $inputCls ?>">
+                </div>
+
+                <!-- Image -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Profile Image</label>
+                    <input type="file" name="image" accept="image/jpeg,image/png,image/webp"
+                           class="text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-neutral-800 file:text-neutral-300 file:text-xs file:font-syne file:uppercase file:tracking-widest hover:file:bg-neutral-700 cursor-pointer">
+                    <p class="text-neutral-600 text-xs mt-1">JPEG, PNG or WebP — max 2 MB</p>
+                </div>
+
+                <!-- is_active -->
+                <div class="flex items-center gap-3 pt-1">
+                    <input type="checkbox" name="is_active" id="create_is_active" value="1"
+                           <?= !isset($createOld) || !empty($createOld['is_active']) ? 'checked' : '' ?>
+                           class="w-4 h-4 accent-lime-300 cursor-pointer">
+                    <label for="create_is_active" class="text-neutral-400 text-sm cursor-pointer">Active account</label>
+                </div>
+
+            </div>
+
+            <div class="px-8 py-5 border-t border-neutral-800 flex gap-3">
+                <button type="submit"
+                    class="flex-1 bg-lime-300 text-neutral-950 font-syne font-bold text-xs tracking-widest uppercase py-3 hover:bg-lime-200 active:scale-[.99] transition-all">
+                    Create User
+                </button>
+                <button type="button" onclick="closeModal('createModal')"
+                    class="px-5 border border-neutral-700 text-neutral-400 font-syne font-bold text-xs tracking-widest uppercase hover:border-neutral-500 transition-all">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     EDIT MODAL
+════════════════════════════════════════════ -->
+<div id="editModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal('editModal')"></div>
+
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-neutral-900 border-l border-neutral-800 flex flex-col translate-x-full transition-transform duration-300" id="editPanel">
+        <div class="h-0.5 bg-lime-300"></div>
+
+        <div class="flex items-center justify-between px-8 py-5 border-b border-neutral-800">
+            <div>
+                <p class="text-lime-300 text-xs tracking-widest uppercase mb-1">Users</p>
+                <h2 class="font-syne font-bold text-xl">Edit User</h2>
+            </div>
+            <button onclick="closeModal('editModal')" class="text-neutral-500 hover:text-white text-xl transition-colors">✕</button>
+        </div>
+
+        <form method="POST" action="/admin/users/update" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-y-auto">
+            <div class="px-8 py-6 space-y-5 flex-1">
+
+                <?php if (!empty($editErrors)): ?>
+                    <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 tracking-wide space-y-1">
+                        <?php foreach ($editErrors as $e): ?>
+                            <div>— <?= htmlspecialchars($e) ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
+                <input type="hidden" name="id" id="edit_id">
+
+                <!-- Current avatar preview -->
+                <div id="edit_avatar_wrap" class="hidden items-center gap-3">
+                    <img id="edit_avatar" src="" class="w-10 h-10 rounded-full object-cover border border-neutral-700" alt="">
+                    <span class="text-neutral-500 text-xs">Current photo</span>
+                </div>
+
+                <!-- Name -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Name <span class="text-red-400">*</span></label>
+                    <input type="text" name="name" id="edit_name"
+                           value="<?= htmlspecialchars($editOld['name'] ?? '') ?>"
+                           class="<?= $inputCls ?>">
+                </div>
+
+                <!-- Email -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Email <span class="text-red-400">*</span></label>
+                    <input type="email" name="email" id="edit_email"
+                           value="<?= htmlspecialchars($editOld['email'] ?? '') ?>"
+                           class="<?= $inputCls ?>">
+                </div>
+
+                <!-- Password -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">New Password</label>
+                    <input type="password" name="password"
+                           placeholder="Leave blank to keep current"
+                           class="<?= $inputCls ?>">
+                </div>
+
+                <!-- Role + Room -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="<?= $fieldCls ?>">
+                        <label class="<?= $labelCls ?>">Role</label>
+                        <select name="role" id="edit_role" class="<?= $inputCls ?>">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="<?= $fieldCls ?>">
+                        <label class="<?= $labelCls ?>">Room</label>
+                        <select name="room_id" id="edit_room_id" class="<?= $inputCls ?>">
+                            <?= roomOptions($rooms, $editOld['room_id'] ?? null) ?>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Extension -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Extension</label>
+                    <input type="text" name="extension" id="edit_extension"
+                           value="<?= htmlspecialchars($editOld['extension'] ?? '') ?>"
+                           placeholder="e.g. 101"
+                           class="<?= $inputCls ?>">
+                </div>
+
+                <!-- Image -->
+                <div class="<?= $fieldCls ?>">
+                    <label class="<?= $labelCls ?>">Replace Profile Image</label>
+                    <input type="file" name="image" accept="image/jpeg,image/png,image/webp"
+                           class="text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-neutral-800 file:text-neutral-300 file:text-xs file:font-syne file:uppercase file:tracking-widest hover:file:bg-neutral-700 cursor-pointer">
+                    <p class="text-neutral-600 text-xs mt-1">Leave empty to keep current image</p>
+                </div>
+
+                <!-- is_active -->
+                <div class="flex items-center gap-3 pt-1">
+                    <input type="checkbox" name="is_active" id="edit_is_active" value="1"
+                           class="w-4 h-4 accent-lime-300 cursor-pointer">
+                    <label for="edit_is_active" class="text-neutral-400 text-sm cursor-pointer">Active account</label>
+                </div>
+
+            </div>
+
+            <div class="px-8 py-5 border-t border-neutral-800 flex gap-3">
+                <button type="submit"
+                    class="flex-1 bg-lime-300 text-neutral-950 font-syne font-bold text-xs tracking-widest uppercase py-3 hover:bg-lime-200 active:scale-[.99] transition-all">
+                    Save Changes
+                </button>
+                <button type="button" onclick="closeModal('editModal')"
+                    class="px-5 border border-neutral-700 text-neutral-400 font-syne font-bold text-xs tracking-widest uppercase hover:border-neutral-500 transition-all">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     DELETE MODAL
+════════════════════════════════════════════ -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal('deleteModal')"></div>
+
+    <div class="relative z-10 bg-neutral-900 border border-neutral-800 w-full max-w-sm mx-4 p-8 scale-95 opacity-0 transition-all duration-200" id="deletePanel">
+        <div class="absolute top-0 left-0 right-0 h-0.5 bg-red-500"></div>
+
+        <p class="text-red-400 text-xs tracking-widest uppercase mb-2">Danger Zone</p>
+        <h2 class="font-syne font-bold text-xl mb-3">Delete User</h2>
+        <p class="text-neutral-400 text-sm mb-6">
+            You are about to delete <span id="delete_name" class="text-white font-medium"></span>.
+            This action <span class="text-red-400">cannot be undone</span>.
+        </p>
+
+        <form method="POST" action="/admin/users/delete" class="flex gap-3">
+            <input type="hidden" name="id" id="delete_id">
+            <button type="submit"
+                class="flex-1 bg-red-500 text-white font-syne font-bold text-xs tracking-widest uppercase py-3 hover:bg-red-400 active:scale-[.99] transition-all">
+                Yes, Delete
+            </button>
+            <button type="button" onclick="closeModal('deleteModal')"
+                class="px-5 border border-neutral-700 text-neutral-400 font-syne font-bold text-xs tracking-widest uppercase hover:border-neutral-500 transition-all">
+                Cancel
+            </button>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        const panel = document.getElementById(id.replace('Modal', 'Panel'));
+        if (panel?.classList.contains('translate-x-full')) {
+            requestAnimationFrame(() => panel.classList.remove('translate-x-full'));
+        }
+        if (id === 'deleteModal') {
+            requestAnimationFrame(() => {
+                panel.classList.remove('scale-95', 'opacity-0');
+                panel.classList.add('scale-100', 'opacity-100');
+            });
+        }
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        const panel = document.getElementById(id.replace('Modal', 'Panel'));
+
+        if (panel?.classList.contains('transition-transform')) {
+            panel.classList.add('translate-x-full');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
+        } else if (id === 'deleteModal') {
+            panel.classList.add('scale-95', 'opacity-0');
+            panel.classList.remove('scale-100', 'opacity-100');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 200);
+        }
+        document.body.style.overflow = '';
+    }
+
+    function openEditModal(user) {
+        document.getElementById('edit_id').value        = user.id;
+        document.getElementById('edit_name').value      = user.name;
+        document.getElementById('edit_email').value     = user.email;
+        document.getElementById('edit_extension').value = user.extension ?? '';
+        document.getElementById('edit_is_active').checked = user.is_active == 1;
+
+        const roleSelect = document.getElementById('edit_role');
+        roleSelect.value = user.role ?? 'user';
+
+        const roomSelect = document.getElementById('edit_room_id');
+        roomSelect.value = user.room_id ?? '';
+
+        // Show avatar preview if user has an image
+        const avatarWrap = document.getElementById('edit_avatar_wrap');
+        const avatarImg  = document.getElementById('edit_avatar');
+        if (user.image) {
+            avatarImg.src = '/public/uploads/users/' + user.image;
+            avatarWrap.classList.remove('hidden');
+            avatarWrap.classList.add('flex');
+        } else {
+            avatarWrap.classList.add('hidden');
+            avatarWrap.classList.remove('flex');
+        }
+
+        openModal('editModal');
+    }
+
+    function openDeleteModal(id, name) {
+        document.getElementById('delete_id').value = id;
+        document.getElementById('delete_name').textContent = name;
+        openModal('deleteModal');
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            ['createModal', 'editModal', 'deleteModal'].forEach(id => {
+                if (!document.getElementById(id).classList.contains('hidden')) closeModal(id);
+            });
+        }
+    });
+
+    <?php if (!empty($createErrors)): ?>
+        openModal('createModal');
+    <?php endif; ?>
+
+    <?php if (!empty($editErrors) && !empty($editOld)): ?>
+        openEditModal(<?= json_encode($editOld) ?>);
+    <?php endif; ?>
+</script>
+
+<?php
+include "layout/footer.php" ;
+?>
+
+========================================
+FILE: views/admin/user_form.php
+========================================
+<?php require __DIR__ . '/../partials/nav_admin.php'; ?>
+
+<?php
+$isEdit = isset($user);
+$title  = $isEdit ? 'Edit User' : 'Add User';
+$user   = $user ?? ['name' => '', 'email' => '', 'room' => '', 'extension' => '', 'image' => null];
+$rooms  = [
+  ['id' => 1, 'room_number' => '2006'],
+  ['id' => 2, 'room_number' => '2010'],
+  ['id' => 3, 'room_number' => '1505'],
+];
+?>
+
+<div class="max-w-lg mx-auto px-6 py-8">
+  <h1 class="text-2xl font-bold text-gray-800 mb-8"><?= $title ?></h1>
+
+  <div class="bg-white rounded-2xl shadow-sm p-6">
+    <form method="POST"
+      action="<?= $isEdit ? BASE_URL . '/admin/users/edit/' . $user['id'] : BASE_URL . '/admin/users/add' ?>"
+      enctype="multipart/form-data" id="user-form" class="space-y-5">
+
+      <!-- Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Name</label>
+        <input id="uname" name="name" type="text"
+          value="<?= htmlspecialchars($user['name']) ?>"
+          placeholder="Full name"
+          class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        <p id="name-error" class="hidden text-red-500 text-xs mt-1">Name is required.</p>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+        <input id="uemail" name="email" type="email"
+          value="<?= htmlspecialchars($user['email']) ?>"
+          placeholder="user@company.com"
+          class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        <p id="email-error" class="hidden text-red-500 text-xs mt-1">Valid email is required.</p>
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">
+          Password <?= $isEdit ? '<span class="text-gray-400 font-normal">(leave blank to keep current)</span>' : '' ?>
+        </label>
+        <input id="upass" name="password" type="password"
+          placeholder="••••••••"
+          class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        <p id="pass-error" class="hidden text-red-500 text-xs mt-1">Password must be at least 6 characters.</p>
+      </div>
+
+      <!-- Confirm Password -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Confirm Password</label>
+        <input id="uconfirm" name="confirm_password" type="password"
+          placeholder="••••••••"
+          class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        <p id="confirm-error" class="hidden text-red-500 text-xs mt-1">Passwords do not match.</p>
+      </div>
+
+      <!-- Room -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Room No.</label>
+        <select name="room_id"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">Select room</option>
+          <?php foreach ($rooms as $r): ?>
+            <option value="<?= $r['id'] ?>"
+              <?= ($user['room_id'] ?? '') == $r['id'] ? 'selected' : '' ?>>
+              <?= $r['room_number'] ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+        <p id="room-error" class="hidden text-red-500 text-xs mt-1">Room is required.</p>
+      </div>
+
+      <!-- Extension -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Ext.</label>
+        <input name="extension" type="text"
+          value="<?= htmlspecialchars($user['extension']) ?>"
+          placeholder="e.g. 5605"
+          class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+      </div>
+
+      <!-- Profile Picture -->
+      <div>
+        <label class="block text-sm font-medium text-gray-600 mb-1">Profile Picture</label>
+        <?php if ($isEdit && $user['image']): ?>
+          <img src="<?= USER_UPLOAD_URL . htmlspecialchars($user['image']) ?>"
+            class="w-12 h-12 rounded-full object-cover border mb-2 mx-auto block"/>
+        <?php endif; ?>
+        <div class="border-2 border-dashed border-gray-300 rounded-xl px-4 py-5 text-center cursor-pointer hover:border-blue-400 transition"
+          onclick="document.getElementById('profile-input').click()">
+          <p class="text-sm text-gray-400">Click to browse</p>
+          <p id="profile-name" class="text-xs text-blue-500 mt-1 hidden"></p>
+        </div>
+        <input id="profile-input" name="image" type="file"
+          accept="image/*" class="hidden" onchange="previewProfile(this)"/>
+        <img id="profile-preview"
+          class="hidden mt-3 rounded-full w-14 h-14 object-cover border mx-auto"/>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3 pt-2">
+        <button type="submit" onclick="return validateUser()"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
+          Save
+        </button>
+        <button type="reset" onclick="resetUserForm()"
+          class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-6 py-2.5 rounded-lg transition">
+          Reset
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+const isEdit = <?= $isEdit ? 'true' : 'false' ?>;
+
+function previewProfile(input) {
+  const file    = input.files[0];
+  const preview = document.getElementById('profile-preview');
+  const name    = document.getElementById('profile-name');
+  if (!file) return;
+  name.textContent = file.name;
+  name.classList.remove('hidden');
+  const reader  = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function validateUser() {
+  const name    = document.getElementById('uname');
+  const email   = document.getElementById('uemail');
+  const pass    = document.getElementById('upass');
+  const confirm = document.getElementById('uconfirm');
+
+  const errors = {
+    'name-error':    () => !name.value.trim(),
+    'email-error':   () => !/\S+@\S+\.\S+/.test(email.value),
+    'pass-error':    () => !isEdit && pass.value.length < 6,
+    'confirm-error': () => pass.value && confirm.value !== pass.value,
+    'room-error':    () => !document.querySelector('select[name=room_id]').value,
+  };
+
+  const fields = { 'name-error': name, 'email-error': email, 'pass-error': pass, 'confirm-error': confirm };
+  let valid = true;
+
+  for (const [errId, check] of Object.entries(errors)) {
+    const errEl = document.getElementById(errId);
+    const field = fields[errId];
+    errEl.classList.add('hidden');
+    if (field) field.classList.remove('border-red-500');
+    if (check()) {
+      errEl.classList.remove('hidden');
+      if (field) field.classList.add('border-red-500');
+      valid = false;
+    }
+  }
+
+  return valid;
+}
+
+function resetUserForm() {
+  document.getElementById('profile-input').value = '';
+  document.getElementById('profile-name').classList.add('hidden');
+  document.getElementById('profile-preview').classList.add('hidden');
+}
+</script>
+========================================
+FILE: views/partials/header.php
+========================================
+
+========================================
+FILE: views/partials/nav_admin.php
+========================================
+<nav class="bg-white shadow-sm px-6 py-3 flex items-center justify-between">
+  <div class="flex gap-6 text-sm font-medium">
+    <a href="<?= BASE_URL ?>/admin"
+      class="<?= ($activeNav ?? '') === 'home' ? 'text-blue-600 font-semibold' : 'text-gray-500 hover:text-blue-600' ?>">
+      Home
+    </a>
+    <a href="<?= BASE_URL ?>/admin/products"
+      class="<?= ($activeNav ?? '') === 'products' ? 'text-blue-600 font-semibold' : 'text-gray-500 hover:text-blue-600' ?>">
+      Products
+    </a>
+    <a href="<?= BASE_URL ?>/admin/users"
+      class="<?= ($activeNav ?? '') === 'users' ? 'text-blue-600 font-semibold' : 'text-gray-500 hover:text-blue-600' ?>">
+      Users
+    </a>
+    <a href="<?= BASE_URL ?>/admin/manual-order"
+      class="<?= ($activeNav ?? '') === 'manual' ? 'text-blue-600 font-semibold' : 'text-gray-500 hover:text-blue-600' ?>">
+      Manual Order
+    </a>
+    <a href="<?= BASE_URL ?>/admin/checks"
+      class="<?= ($activeNav ?? '') === 'checks' ? 'text-blue-600 font-semibold' : 'text-gray-500 hover:text-blue-600' ?>">
+      Checks
+    </a>
+  </div>
+  <div class="flex items-center gap-2 text-sm text-gray-700 font-medium">
+    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+      AD
+    </div>
+    <?= htmlspecialchars($currentUser['name'] ?? 'Admin') ?>
+    <a href="<?= BASE_URL ?>/logout"
+      class="ml-3 text-xs text-gray-400 hover:text-red-500 transition">
+      Logout
+    </a>
+  </div>
+</nav>
+========================================
+FILE: views/partials/nav_user.php
+========================================
+<nav class="bg-white shadow-sm px-6 py-3 flex items-center justify-between">
+  <div class="flex gap-6 text-sm font-medium">
+    <a href="<?= BASE_URL ?>/"
+      class="<?= ($activeNav ?? '') === 'home' ? 'text-blue-600 font-semibold' : 'text-gray-500 hover:text-blue-600' ?>">
+      Home
+    </a>
+    <a href="<?= BASE_URL ?>/orders"
+      class="<?= ($activeNav ?? '') === 'orders' ? 'text-blue-600 font-semibold' : 'text-gray-500 hover:text-blue-600' ?>">
+      My Orders
+    </a>
+  </div>
+  <div class="flex items-center gap-2 text-sm text-gray-700 font-medium">
+    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+      <?= strtoupper(substr($currentUser['name'] ?? 'U', 0, 2)) ?>
+    </div>
+    <?= htmlspecialchars($currentUser['name'] ?? '') ?>
+    <a href="<?= BASE_URL ?>/logout"
+      class="ml-3 text-xs text-gray-400 hover:text-red-500 transition">
+      Logout
+    </a>
+  </div>
+</nav>
+========================================
+FILE: views/admin/layout/header.php
+========================================
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+
+
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+
+<?php
+
+$success = $_SESSION["success"] ?? null;
+$error   = $_SESSION["error"] ?? null;
+
+
+
+unset($_SESSION["success"]);
+unset($_SESSION["error"]);
+
+
+
+?>
+
+<?php if ($success): ?>
+
+<div
+id="toastSuccess"
+class="fixed top-20 left-1/2 -translate-x-1/2
+z-[9999]
+flex items-center gap-3
+bg-emerald-500 text-white
+px-6 py-3
+rounded-xl
+shadow-2xl
+border border-emerald-300">
+
+    <span class="text-xl">✅</span>
+
+    <span class="font-semibold">
+        <?= $success ?> added successfully
+    </span>
+
+</div>
+
+<script>
+
+setTimeout(() => {
+
+    const t = document.getElementById("toastSuccess");
+
+    if (t) {
+        t.classList.add("opacity-0","-translate-y-2");
+        setTimeout(()=> t.remove(),300);
+    }
+
+}, 3000);
+
+</script>
+
+<?php endif; ?>
+
+
+
+<?php if ($error): ?>
+
+<div
+id="toastError"
+class="fixed top-20 left-1/2 -translate-x-1/2
+z-[9999]
+flex items-center gap-3
+bg-red-500 text-white
+px-6 py-3
+rounded-xl
+shadow-2xl
+border border-red-300">
+
+    <span class="text-xl">❌</span>
+
+    <span class="font-semibold">
+        <?= $error ?>
+    </span>
+
+</div>
+
+<script>
+
+setTimeout(() => {
+
+    const t = document.getElementById("toastError");
+
+    if (t) {
+        t.classList.add("opacity-0","-translate-y-2");
+        setTimeout(()=> t.remove(),300);
+    }
+
+}, 4000);
+
+</script>
+
+<?php endif; ?>
+<!-- NAVBAR -->
+<nav
+class="sticky top-0 z-50
+bg-white/70 dark:bg-gray-800/70
+backdrop-blur-xl
+border-b border-gray-200 dark:border-gray-700
+shadow-sm">
+
+<div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+
+
+    <!-- LEFT -->
+    <div class="flex items-center gap-10">
+
+
+        <!-- LOGO -->
+        <div
+        class="text-2xl font-bold
+        text-blue-600 dark:text-blue-400
+        tracking-wide
+        transition
+        hover:scale-105">
+
+            🍽️ Cafeteria
+
+        </div>
+
+
+        <!-- LINKS -->
+        <div class="hidden md:flex items-center gap-6 text-sm font-medium">
+
+
+            <a href="dashboard.html"
+            class="px-2 py-1 rounded-md
+            text-gray-700 dark:text-gray-300
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700
+            transition">
+
+                Dashboard
+
+            </a>
+
+
+            <a href="users.html"
+            class="px-2 py-1 rounded-md
+            text-gray-700 dark:text-gray-300
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700
+            transition">
+
+                Users
+
+            </a>
+
+
+            <a href="orders.html"
+            class="px-2 py-1 rounded-md
+            text-gray-700 dark:text-gray-300
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700
+            transition">
+
+                Orders
+
+            </a>
+
+
+            <a href="/products/"
+            class="px-3 py-1.5 rounded-md
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700 text-white
+            shadow <?= $current == "proudects" ? 'bg-blue-600' : ' ' ?> transition">
+
+                Products
+
+            </a>
+                     <a href="/admin/categories/"
+            class="px-3 py-1.5 rounded-md
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700 text-white
+            shadow <?= $current == "categories" ? 'bg-blue-600' : ' ' ?> transition">
+
+                categories
+
+            </a>
+
+
+
+            <a href="employees.html"
+            class="px-2 py-1 rounded-md
+            text-gray-700 dark:text-gray-300
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700
+            transition">
+
+                Employees
+
+            </a>
+
+
+            <a href="payments.html"
+            class="px-2 py-1 rounded-md
+            text-gray-700 dark:text-gray-300
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700
+            transition">
+
+                Payments
+
+            </a>
+
+
+            <a href="settings.html"
+            class="px-2 py-1 rounded-md
+            text-gray-700 dark:text-gray-300
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700
+            transition">
+
+                Settings
+
+            </a>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- RIGHT -->
+    <div class="flex items-center gap-3">
+
+
+        <!-- DARK MODE -->
+        <button
+        onclick="toggleDarkMode()"
+        class="w-10 h-10 flex items-center justify-center
+        rounded-lg
+        bg-gray-100 dark:bg-gray-700
+        hover:bg-gray-200
+        dark:hover:bg-gray-600
+        transition
+        hover:scale-110">
+
+            🌙
+
+        </button>
+
+
+
+        <!-- LOGOUT -->
+        <button
+        onclick="logout()"
+        class="px-4 py-2
+        rounded-lg
+        bg-red-600
+        hover:bg-red-700
+        text-white
+        font-semibold
+        shadow
+        transition
+        hover:scale-105">
+
+            Logout
+
+        </button>
+
+
+    </div>
+
+
+</div>
+</nav>
+========================================
+FILE: views/admin/layout/footer.php
+========================================
+    <script>
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        }
+
+        function logout() {
+            if(confirm('هل تريد تسجيل الخروج؟')) {
+                window.location.href = '../index.html';
+            }
+        }
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

@@ -2,25 +2,26 @@
 
 use App\core\Route;
 use App\controllers\AuthController;
+use App\Middleware\AdminMiddleware;
 use App\controllers\UserController;
 use App\controllers\ProductController;
 use App\controllers\categoryController ;
 
 // Authentication
-Route::get("/", [AuthController::class, 'showLogin']);
-Route::get("/login", [AuthController::class, 'showLogin']);
-Route::post("/login", [AuthController::class, 'login']);
-Route::get("/logout", [AuthController::class, 'logout']);
+Route::get( '/login',  [AuthController::class, 'showLogin']);
+Route::get( '/',       [AuthController::class, 'showLogin']);
+Route::post('/login',  [AuthController::class, 'login']);
+Route::get( '/logout', [AuthController::class, 'logout']);
 
 //Home (after login)
 // Route::get("/admin/home", [HomeController::class, 'admin']);
 // Route::get("/home", [HomeController::class, 'user']);
 
 // User management (Admin)
-Route::get("admin/users", [UserController::class, 'index']);
-Route::post("admin/users/store", [UserController::class, 'store']);
-Route::post("admin/users/update", [UserController::class, 'update']);
-Route::post("admin/users/delete", [UserController::class, 'delete']);
+Route::get( '/admin/users',        [UserController::class, 'index'],  [AdminMiddleware::class]);
+Route::post('/admin/users/store',  [UserController::class, 'store'],  [AdminMiddleware::class]);
+Route::post('/admin/users/update', [UserController::class, 'update'], [AdminMiddleware::class]);
+Route::post('/admin/users/delete', [UserController::class, 'delete'], [AdminMiddleware::class]);
 
 // Products (Admin)
 Route::get("products" , [ProductController::class , "index"]) ;

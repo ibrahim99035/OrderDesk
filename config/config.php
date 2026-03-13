@@ -7,8 +7,8 @@ define('DB_USER', getenv('DB_USER'));
 define('DB_PASS', getenv('DB_PASS'));
 
 //Application
-define('BASE_URL',   '/cafeteria');
-define('APP_NAME',   'Cafeteria');
+define('BASE_URL', '/apps/OrderDesk');
+define('APP_NAME',   'OrderDesk');
 
 //File Uploads
 define('UPLOAD_PATH',         __DIR__ . '/../public/uploads/');
@@ -20,7 +20,12 @@ define('PRODUCT_UPLOAD_URL',  UPLOAD_URL . 'products/');
 define('USER_UPLOAD_URL',     UPLOAD_URL . 'users/');
 
 define('MAX_UPLOAD_SIZE',     2 * 1024 * 1024); // 2MB in bytes
-define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
+define('ALLOWED_IMAGE_TYPES', [
+    'image/jpg',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+]);
 
 //Pagination
 define('ITEMS_PER_PAGE', 10);

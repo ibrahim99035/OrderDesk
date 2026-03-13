@@ -2,195 +2,233 @@
 
 namespace App\controllers;
 
-use App\core\Session;
+use App\core\Controller;
+use App\core\FileManager;
 use App\core\View;
+use App\core\Session;
 use App\repositories\UserRepository;
-use App\repositories\RoomRepository;
+use App\models\Room;
 
-class UserController
+class UserController extends Controller
 {
     private UserRepository $userRepo;
-    private RoomRepository $roomRepo;
 
     public function __construct()
     {
+        parent::__construct();
+        $this->requireAdmin(); // controller-level guard (belt + middleware suspenders)
         $this->userRepo = new UserRepository();
-        $this->roomRepo = new RoomRepository();
     }
 
-    // GET /admin/users
-    public function index()
+    // ─────────────────────────────────────────────
+    //  GET  /admin/users
+    // ─────────────────────────────────────────────
+    public function index(): void
     {
-        View::make('admin.users', [
-            'users' => $this->userRepo->allWithRoom(),
-            'rooms' => $this->roomRepo->allRooms(),
-        ]);
+        $users = $this->userRepo->allWithRoom();
+        $rooms = (new Room())->all();
+
+        // Pull flash data set by store/update when they redirect back with errors
+        $createErrors = Session::flash('createErrors');
+        $createOld    = Session::flash('createOld');
+        $editErrors   = Session::flash('editErrors');
+        $editOld      = Session::flash('editOld');
+        $current      = 'users';
+
+        View::make('admin.users', compact(
+            'users', 'rooms', 'current',
+            'createErrors', 'createOld',
+            'editErrors',   'editOld'
+        ));
     }
 
-    // POST /admin/users/store
-    public function store()
+    // ─────────────────────────────────────────────
+    //  POST /admin/users/store
+    // ─────────────────────────────────────────────
+    public function store(): void
     {
-        $data   = $this->sanitizeInput($_POST);
-        $errors = $this->validate($data);
+        $data = [
+            'name'      => $this->post('name'),
+            'email'     => $this->post('email'),
+            'password'  => $this->post('password'),
+            'role'      => $this->post('role', 'user'),
+            'room_id'   => $this->post('room_id'),
+            'extension' => $this->post('extension'),
+            'is_active' => $this->post('is_active') ? 1 : 0,
+        ];
+
+        $errors = $this->validateUser($data, isCreate: true);
+
+        // Check email uniqueness
+        if (empty($errors['email']) && $this->userRepo->findByEmail($data['email'])) {
+            $errors['email'] = 'This email is already registered.';
+        }
 
         if (!empty($errors)) {
-            View::make('admin.users', [
-                'users'        => $this->userRepo->allWithRoom(),
-                'rooms'        => $this->roomRepo->allRooms(),
-                'createErrors' => $errors,
-                'createOld'    => $data,
-            ]);
+            Session::set('createErrors', $errors);
+            Session::set('createOld',    $data);
+            $this->redirect('/admin/users');
             return;
         }
 
-        if ($this->userRepo->findByEmail($data['email'])) {
-            View::make('admin.users', [
-                'users'        => $this->userRepo->allWithRoom(),
-                'rooms'        => $this->roomRepo->allRooms(),
-                'createErrors' => ['email' => 'This email is already taken.'],
-                'createOld'    => $data,
-            ]);
-            return;
+        // Handle image upload
+        $imagePath = null;
+        if (!empty($_FILES['image']['name'])) {
+            $fm = new FileManager(USER_UPLOAD_PATH);
+            $fm->types(ALLOWED_IMAGE_TYPES);
+            $fm->maxSize(MAX_UPLOAD_SIZE);
+            $fullPath  = $fm->upload($_FILES['image']);
+            if (!$fullPath) {
+                Session::set('createErrors', ['image' => 'Invalid image. Allowed: JPEG, PNG, WebP (max 2 MB).']);
+                Session::set('createOld',    $data);
+                $this->redirect('/admin/users');
+                return;
+            }
+            $imagePath = basename($fullPath);
         }
 
-        $data['image']    = $this->handleImageUpload('image');
-        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        $data['image']    = $imagePath;
 
-        $this->userRepo->createUser($data);
+        $result = $this->userRepo->createUser($data);
 
-        header('Location: /admin/users');
-        exit;
+        if ($result) {
+            $_SESSION['success'] = 'User created successfully.';
+        } else {
+            $_SESSION['error'] = 'Failed to create user. Please try again.';
+        }
+
+        $this->redirect('/admin/users');
     }
 
-    // POST /admin/users/update
-    public function update()
+    // ─────────────────────────────────────────────
+    //  POST /admin/users/update
+    // ─────────────────────────────────────────────
+    public function update(): void
     {
-        $id   = (int) ($_POST['id'] ?? 0);
+        $id = (int) $this->post('id');
+
+        if (!$id) {
+            $this->redirect('/admin/users');
+            return;
+        }
+
+        $existing = $this->userRepo->find($id);
+        if (!$existing) {
+            $_SESSION['error'] = 'User not found.';
+            $this->redirect('/admin/users');
+            return;
+        }
+
+        $data = [
+            'name'      => $this->post('name'),
+            'email'     => $this->post('email'),
+            'password'  => $this->post('password'), // optional on edit
+            'role'      => $this->post('role', 'user'),
+            'room_id'   => $this->post('room_id'),
+            'extension' => $this->post('extension'),
+            'is_active' => $this->post('is_active') ? 1 : 0,
+        ];
+
+        $errors = $this->validateUser($data, isCreate: false);
+
+        // Check email uniqueness (exclude current user)
+        if (empty($errors['email'])) {
+            $byEmail = $this->userRepo->findByEmail($data['email']);
+            if ($byEmail && (int)$byEmail['id'] !== $id) {
+                $errors['email'] = 'This email is already used by another account.';
+            }
+        }
+
+        if (!empty($errors)) {
+            Session::set('editErrors', $errors);
+            Session::set('editOld',    array_merge($existing, $data, ['id' => $id]));
+            $this->redirect('/admin/users');
+            return;
+        }
+
+        // Handle image upload (keep old if none uploaded)
+        $oldImage  = $existing['image'] ?? null;
+        $imagePath = null;
+
+        if (!empty($_FILES['image']['name'])) {
+            $fm = new FileManager(USER_UPLOAD_PATH);
+            $fm->types(ALLOWED_IMAGE_TYPES);
+            $fm->maxSize(MAX_UPLOAD_SIZE);
+            $fullPath  = $fm->upload($_FILES['image']);
+            if (!$fullPath) {
+                Session::set('editErrors', ['image' => 'Invalid image. Allowed: JPEG, PNG, WebP (max 2 MB).']);
+                Session::set('editOld',    array_merge($existing, $data, ['id' => $id]));
+                $this->redirect('/admin/users');
+                return;
+            }
+            $imagePath = basename($fullPath);
+        }
+
+        // Hash password only if a new one was provided
+        if (!empty($data['password'])) {
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        } else {
+            unset($data['password']);
+        }
+
+        $data['image'] = $imagePath; // null = keep existing (updateUser handles this)
+
+        $result = $this->userRepo->updateUser($id, $data);
+
+        // Delete old image only after successful update and only if replaced
+        if ($result !== false && $imagePath && $oldImage) {
+            $fm = new FileManager(USER_UPLOAD_PATH);
+            $fm->delete(USER_UPLOAD_PATH . $oldImage);
+        }
+
+        if ($result !== false) {
+            $_SESSION['success'] = 'User updated successfully.';
+        } else {
+            $_SESSION['error'] = 'Failed to update user. Please try again.';
+        }
+
+        $this->redirect('/admin/users');
+    }
+
+    // ─────────────────────────────────────────────
+    //  POST /admin/users/delete
+    // ─────────────────────────────────────────────
+    public function delete(): void
+    {
+        $id = (int) $this->post('id');
+
+        // Prevent self-deletion
+        if ($id === (int) Session::get('user_id')) {
+            $_SESSION['error'] = 'You cannot delete your own account.';
+            $this->redirect('/admin/users');
+            return;
+        }
+
         $user = $this->userRepo->find($id);
 
         if (!$user) {
-            header('Location: /admin/users');
-            exit;
-        }
-
-        $data   = $this->sanitizeInput($_POST);
-        $errors = $this->validate($data, isUpdate: true);
-
-        if (!empty($errors)) {
-            View::make('admin.users', [
-                'users'      => $this->userRepo->allWithRoom(),
-                'rooms'      => $this->roomRepo->allRooms(),
-                'editErrors' => $errors,
-                'editOld'    => array_merge($user, $data),
-            ]);
+            $_SESSION['error'] = 'User not found.';
+            $this->redirect('/admin/users');
             return;
         }
 
-        $existing = $this->userRepo->findByEmail($data['email']);
-        if ($existing && (int) $existing['id'] !== $id) {
-            View::make('admin.users', [
-                'users'      => $this->userRepo->allWithRoom(),
-                'rooms'      => $this->roomRepo->allRooms(),
-                'editErrors' => ['email' => 'This email is already taken.'],
-                'editOld'    => array_merge($user, $data),
-            ]);
-            return;
-        }
-
-        // Build SET clause
-        $name      = addslashes($data['name']);
-        $email     = addslashes($data['email']);
-        $role      = $data['role'];
-        $roomId    = $data['room_id']   ? (int) $data['room_id']        : 'NULL';
-        $extension = $data['extension'] ? "'" . addslashes($data['extension']) . "'" : 'NULL';
-        $isActive  = $data['is_active'] ? 1 : 0;
-
-        $set = "name = '$name', email = '$email', role = '$role',
-                room_id = $roomId, extension = $extension, is_active = $isActive";
-
-        if (!empty($data['password'])) {
-            $hashed = password_hash($data['password'], PASSWORD_BCRYPT);
-            $set   .= ", password = '$hashed'";
-        }
-
-        // Handle new image upload
-        $newImage = $this->handleImageUpload('image');
-        if ($newImage) {
-            // Remove old image if exists
-            if (!empty($user['image'])) {
-                $old = __DIR__ . '/../../public/uploads/users/' . $user['image'];
-                if (file_exists($old)) unlink($old);
-            }
-            $set .= ", image = '$newImage'";
-        }
-
-        $this->userRepo->where("id = $id")->update($set, []);
-
-        header('Location: /admin/users');
-        exit;
-    }
-
-    // POST /admin/users/delete
-    public function delete()
-    {
-        $id = (int) ($_POST['id'] ?? 0);
-
-        if ($id === (int) Session::get('user_id')) {
-            header('Location: /admin/users');
-            exit;
-        }
-
-        // Remove image file if exists
-        $user = $this->userRepo->find($id);
-        if ($user && !empty($user['image'])) {
-            $path = __DIR__ . '/../../public/uploads/users/' . $user['image'];
-            if (file_exists($path)) unlink($path);
+        // Delete profile image if it exists
+        if (!empty($user['image'])) {
+            $fm = new FileManager(USER_UPLOAD_PATH);
+            $fm->delete(USER_UPLOAD_PATH . $user['image']);
         }
 
         $this->userRepo->where("id = $id")->delete();
 
-        header('Location: /admin/users');
-        exit;
+        $_SESSION['success'] = 'User deleted successfully.';
+        $this->redirect('/admin/users');
     }
 
-    // -------------------------------------------------------------------------
-
-    private function handleImageUpload(string $field): ?string
-    {
-        if (empty($_FILES[$field]['name'])) return null;
-
-        $file     = $_FILES[$field];
-        $allowed  = ['image/jpeg', 'image/png', 'image/webp'];
-        $maxSize  = 2 * 1024 * 1024; // 2 MB
-
-        if (!in_array($file['type'], $allowed) || $file['size'] > $maxSize) return null;
-
-        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = md5(uniqid()) . '.' . $ext;
-        $dest     = __DIR__ . '/../../public/uploads/users/' . $filename;
-
-        if (move_uploaded_file($file['tmp_name'], $dest)) {
-            return $filename;
-        }
-
-        return null;
-    }
-
-    private function sanitizeInput(array $input): array
-    {
-        return [
-            'name'      => trim($input['name']      ?? ''),
-            'email'     => trim($input['email']     ?? ''),
-            'password'  => trim($input['password']  ?? ''),
-            'role'      => in_array($input['role'] ?? '', ['admin', 'user']) ? $input['role'] : 'user',
-            'room_id'   => !empty($input['room_id']) ? (int) $input['room_id'] : null,
-            'extension' => trim($input['extension'] ?? ''),
-            'is_active' => isset($input['is_active']) ? 1 : 0,
-            'image'     => null, // handled separately via file upload
-        ];
-    }
-
-    private function validate(array $data, bool $isUpdate = false): array
+    // ─────────────────────────────────────────────
+    //  Validation helper
+    // ─────────────────────────────────────────────
+    private function validateUser(array $data, bool $isCreate): array
     {
         $errors = [];
 
@@ -201,13 +239,21 @@ class UserController
         if (empty($data['email'])) {
             $errors['email'] = 'Email is required.';
         } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Invalid email format.';
+            $errors['email'] = 'Enter a valid email address.';
         }
 
-        if (!$isUpdate && empty($data['password'])) {
-            $errors['password'] = 'Password is required.';
+        if ($isCreate) {
+            if (empty($data['password'])) {
+                $errors['password'] = 'Password is required.';
+            } elseif (strlen($data['password']) < 8) {
+                $errors['password'] = 'Password must be at least 8 characters.';
+            }
         } elseif (!empty($data['password']) && strlen($data['password']) < 8) {
-            $errors['password'] = 'Password must be at least 8 characters.';
+            $errors['password'] = 'New password must be at least 8 characters.';
+        }
+
+        if (!in_array($data['role'], ['user', 'admin'], true)) {
+            $errors['role'] = 'Invalid role selected.';
         }
 
         return $errors;

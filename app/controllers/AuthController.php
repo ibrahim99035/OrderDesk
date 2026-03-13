@@ -2,20 +2,22 @@
 
 namespace App\controllers;
 
+use App\core\Controller;
 use App\core\Session;
 use App\core\View;
 use App\repositories\UserRepository;
 
-class AuthController
+class AuthController extends Controller
 {
     private UserRepository $userRepo;
 
     public function __construct()
     {
+        parent::__construct();
         $this->userRepo = new UserRepository();
     }
 
-    public function showLogin()
+    public function showLogin(): void
     {
         if (Session::isLoggedIn()) {
             $this->redirectByRole();
@@ -25,10 +27,10 @@ class AuthController
         View::make('auth.login');
     }
 
-    public function login()
+    public function login(): void
     {
-        $email    = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
+        $email    = trim($_POST['email']    ?? '');
+        $password =      $_POST['password'] ?? '';
 
         if (empty($email) || empty($password)) {
             View::make('auth.login', ['error' => 'Email and password are required.']);
@@ -42,6 +44,11 @@ class AuthController
             return;
         }
 
+        if (!$user['is_active']) {
+            View::make('auth.login', ['error' => 'Your account is inactive. Contact an administrator.']);
+            return;
+        }
+
         Session::set('user_id', $user['id']);
         Session::set('role',    $user['role']);
         Session::set('name',    $user['name']);
@@ -49,20 +56,18 @@ class AuthController
         $this->redirectByRole();
     }
 
-    public function logout()
+    public function logout(): void
     {
         Session::destroy();
-        header('Location: /login');
-        exit;
+        $this->redirect('/login');
     }
 
     private function redirectByRole(): void
     {
         if (Session::isAdmin()) {
-            header('Location: /admin/home');
+            $this->redirect('/admin/users');
         } else {
-            header('Location: /home');
+            $this->redirect('/home');
         }
-        exit;
     }
 }

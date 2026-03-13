@@ -2,15 +2,17 @@
 
 namespace App\Middleware;
 
+use App\core\Session;
+
 class AuthMiddleware
 {
-    public static function handle()
+    public static function handle(): void
     {
-        if(!isset($_SESSION['user'])){
-            echo "Unauthorized";
+        Session::start();
+
+        if (!Session::isLoggedIn()) {
+            header('Location: ' . BASE_URL . '/login');
             exit;
-        }else{
-            echo "hello" ;
         }
     }
 }

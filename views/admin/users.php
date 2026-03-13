@@ -153,7 +153,7 @@ $fieldCls  = "flex flex-col";
             <button onclick="closeModal('createModal')" class="text-neutral-500 hover:text-white text-xl transition-colors">✕</button>
         </div>
 
-        <form method="POST" action="/admin/users/store" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-y-auto">
+        <form method="POST" action="<?= BASE_URL ?>/admin/users/store" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-y-auto">
             <div class="px-8 py-6 space-y-5 flex-1">
 
                 <?php if (!empty($createErrors)): ?>
@@ -262,7 +262,7 @@ $fieldCls  = "flex flex-col";
             <button onclick="closeModal('editModal')" class="text-neutral-500 hover:text-white text-xl transition-colors">✕</button>
         </div>
 
-        <form method="POST" action="/admin/users/update" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-y-auto">
+        <form method="POST" action="<?= BASE_URL ?>/admin/users/update" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-y-auto">
             <div class="px-8 py-6 space-y-5 flex-1">
 
                 <?php if (!empty($editErrors)): ?>
@@ -379,7 +379,7 @@ $fieldCls  = "flex flex-col";
             This action <span class="text-red-400">cannot be undone</span>.
         </p>
 
-        <form method="POST" action="/admin/users/delete" class="flex gap-3">
+        <form method="POST" action="<?= BASE_URL ?>/admin/users/delete" class="flex gap-3">
             <input type="hidden" name="id" id="delete_id">
             <button type="submit"
                 class="flex-1 bg-red-500 text-white font-syne font-bold text-xs tracking-widest uppercase py-3 hover:bg-red-400 active:scale-[.99] transition-all">

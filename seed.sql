@@ -1,27 +1,27 @@
 -- ═══════════════════════════════════════════
 -- Rooms seed
 -- ═══════════════════════════════════════════
-INSERT INTO rooms (room_number) VALUES
-    ('101'),
-    ('102'),
-    ('103'),
-    ('104'),
-    ('105'),
-    ('201'),
-    ('202'),
-    ('203'),
-    ('204'),
-    ('205'),
-    ('301'),
-    ('302'),
-    ('303'),
-    ('304'),
-    ('305'),
-    ('Conference A'),
-    ('Conference B'),
-    ('Server Room'),
-    ('Reception'),
-    ('Manager Office');
+-- INSERT INTO rooms (room_number) VALUES
+--     ('101'),
+--     ('102'),
+--     ('103'),
+--     ('104'),
+--     ('105'),
+--     ('201'),
+--     ('202'),
+--     ('203'),
+--     ('204'),
+--     ('205'),
+--     ('301'),
+--     ('302'),
+--     ('303'),
+--     ('304'),
+--     ('305'),
+--     ('Conference A'),
+--     ('Conference B'),
+--     ('Server Room'),
+--     ('Reception'),
+--     ('Manager Office');
 
 
 -- ═══════════════════════════════════════════
@@ -29,14 +29,14 @@ INSERT INTO rooms (room_number) VALUES
 -- Password: Admin@1234
 -- Hash generated with PASSWORD_BCRYPT
 -- ═══════════════════════════════════════════
-INSERT INTO users (name, email, password, role, is_active)
-VALUES (
-    'Super Admin',
-    'admin@admin.com',
-    '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
-    'admin',
-    1
-);
+-- INSERT INTO users (name, email, password, role, is_active)
+-- VALUES (
+--     'Super Admin',
+--     'admin@admin.com',
+--     '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+--     'admin',
+--     1
+-- );
 
 
 -- ═══════════════════════════════════════════
@@ -48,3 +48,7 @@ VALUES (
 --
 -- Change the password after first login.
 -- ═══════════════════════════════════════════
+
+
+
+UPDATE users SET password = '$2y$10$4HE/p612UGfmHzM/6vv17.Q4DOegsezlQh7ARw4v0yEPsThhXE7dW' WHERE email = 'admin@admin.com';

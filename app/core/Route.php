@@ -8,54 +8,52 @@ class Route
 {
     private static array $routes = [];
 
-    public static function add($method,$uri,$action)
+    public static function add(string $method, string $uri, array $action, array $middleware = []): void
     {
-        $uri = trim($uri,'/');
-        $uri = $uri ? "/$uri" : "/";
-
-        self::$routes[$method][] = [
-            'uri'=>$uri,
-            'action'=>$action
-        ];
-    }
-
-    public static function get($uri,$action)
-    {
-        self::add('GET',$uri,$action);
-    }
-
-    public static function post($uri,$action)
-    {
-        self::add('POST',$uri,$action);
-    }
-
-    public static function put($uri,$action)
-    {
-        self::add('PUT',$uri,$action);
-    }
-
-    public static function delete($uri,$action)
-    {
-        self::add('DELETE',$uri,$action);
-    }
-
-    public static function patch($uri,$action)
-    {
-        self::add('PATCH',$uri,$action);
-    }
-
-    public static function dispatch()
-    {
-        $method = $_SERVER['REQUEST_METHOD'];
-
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-        // Normalize to always include a leading slash and no trailing slash.
         $uri = trim($uri, '/');
         $uri = $uri ? "/$uri" : "/";
 
-        // Support running the app under a subdirectory (e.g. /apps/OrderDesk or /cafeteria).
-        // Strip out the base prefix automatically so routes stay the same.
+        self::$routes[$method][] = [
+            'uri'        => $uri,
+            'action'     => $action,
+            'middleware' => $middleware,
+        ];
+    }
+
+    public static function get(string $uri, array $action, array $middleware = []): void
+    {
+        self::add('GET', $uri, $action, $middleware);
+    }
+
+    public static function post(string $uri, array $action, array $middleware = []): void
+    {
+        self::add('POST', $uri, $action, $middleware);
+    }
+
+    public static function put(string $uri, array $action, array $middleware = []): void
+    {
+        self::add('PUT', $uri, $action, $middleware);
+    }
+
+    public static function delete(string $uri, array $action, array $middleware = []): void
+    {
+        self::add('DELETE', $uri, $action, $middleware);
+    }
+
+    public static function patch(string $uri, array $action, array $middleware = []): void
+    {
+        self::add('PATCH', $uri, $action, $middleware);
+    }
+
+    public static function dispatch(): void
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+        $uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+        $uri = trim($uri, '/');
+        $uri = $uri ? "/$uri" : "/";
+
+        // Strip base path prefix so routes stay clean.
         $bases = [];
         if (defined('BASE_URL')) {
             $bases[] = rtrim(BASE_URL, '/');
@@ -71,35 +69,36 @@ class Route
             }
         }
 
-        if(!isset(self::$routes[$method])){
-            echo "404 Route Not Found";
+        if (!isset(self::$routes[$method])) {
+            View::make('404');
             return;
         }
 
-        foreach(self::$routes[$method] as $route){
+        foreach (self::$routes[$method] as $route) {
 
             $pattern = preg_replace(
                 '#\{([a-zA-Z0-9_]+)\}#',
                 '([^/]+)',
                 $route['uri']
             );
-
             $pattern = "#^" . $pattern . "$#";
 
-            if(preg_match($pattern,$uri,$matches)){
-
+            if (preg_match($pattern, $uri, $matches)) {
                 array_shift($matches);
 
-                [$controller,$function] = $route['action'];
+                // Run middleware stack — each middleware can halt the request.
+                foreach ($route['middleware'] as $middlewareClass) {
+                    $middlewareClass::handle();
+                }
 
-                $controller = new $controller;
-
+                [$controllerClass, $function] = $route['action'];
+                $controller = new $controllerClass;
                 $controller->$function(...$matches);
 
                 return;
             }
         }
 
-       View::make("404") ;
+        View::make('404');
     }
 }
