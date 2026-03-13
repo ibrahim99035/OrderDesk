@@ -124,7 +124,7 @@ class UserController
             $set .= ", image = '$newImage'";
         }
 
-        $this->userRepo->where("id = $id")->update($set);
+        $this->userRepo->where("id = $id")->update($set, []);
 
         header('Location: /admin/users');
         exit;

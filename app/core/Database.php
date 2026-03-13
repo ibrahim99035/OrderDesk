@@ -5,16 +5,20 @@ use PDOException;
 
 
 class Database{
-    private $host = DB_HOST;
-    private $username = DB_USER ;
-    private $password = DB_PASS;
-    private $db_name = DB_NAME ;
+    private $host;
+    private $username;
+    private $password;
+    private $db_name;
     public $conn ;
     private static $instance = null ;
 
     private function __construct(){
       
         try {
+            $this->host = $_ENV["DB_HOST"];
+            $this->username = $_ENV["DB_USER"];
+            $this->password = $_ENV["DB_PASS"];
+            $this->db_name = $_ENV["DB_NAME"];
             $this->conn = new PDO("mysql:host=$this->host;dbname=$this->db_name",$this->username,$this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {

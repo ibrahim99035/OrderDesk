@@ -87,19 +87,29 @@ class Model
         }
     }
 
-    public function update($columns_values)
+    public function update($columns, $values)
     {
         $conn = Database::getConnection();
 
-        $sql = "UPDATE $this->table SET $columns_values WHERE $this->condition";
+        $set = [];
+
+        foreach ($columns as $col) {
+            $set[] = "$col = ?";
+        }
+
+        $setString = implode(", ", $set);
+
+        $sql = "UPDATE {$this->table} SET $setString WHERE {$this->condition}";
 
         try {
+
             $stmt = $conn->prepare($sql);
-            $stmt->execute();
+            $stmt->execute($values);
 
             return $stmt->rowCount();
 
         } catch (PDOException $e) {
+            var_dump($e->getMessage());
             return false;
         }
     }
