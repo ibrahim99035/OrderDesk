@@ -178,7 +178,7 @@ shadow-sm">
             </a>
 
 
-            <a href="products.html"
+            <a href="/products/"
             class="px-3 py-1.5 rounded-md
             bg-blue-600 text-white
             shadow

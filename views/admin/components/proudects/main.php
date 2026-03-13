@@ -69,9 +69,35 @@
                     <h3 class="text-base font-bold text-gray-900 dark:text-white leading-snug">
                         <?= $proudect["name"] ?>
                     </h3>
-                    <span class="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
+                    <?php if ($proudect["is_available"] == 1): ?>
+
+                        <a
+                        href="/products/toggle/<?= $proudect["id"] ?>"
+                        class="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full
+                        bg-blue-50 dark:bg-blue-900/30
+                        text-blue-600 dark:text-blue-400
+                        border border-blue-100 dark:border-blue-800
+                        hover:bg-blue-600 hover:text-white transition">
+
                         Active
-                    </span>
+
+                        </a>
+
+                        <?php else: ?>
+
+                            <a
+                            href="/products/toggle/<?= $proudect["id"] ?>"
+                            class="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full
+                            bg-red-50 dark:bg-red-900/30
+                            text-red-600 dark:text-red-400
+                            border border-red-100 dark:border-red-800
+                            hover:bg-red-600 hover:text-white transition">
+
+                            Not Active
+
+                            </a>
+
+                         <?php endif; ?>
                 </div>
 
                 <!-- Description -->
@@ -118,7 +144,7 @@
                     <form class="flex-1 inline-flex" action="products/delete/<?= $proudect["id"] ?>" method="POST">
                         
                         <button
-                            onclick="deleteProduct(1)"
+                            
                             class="flex w-full h-12 items-center justify-center gap-1.5
                             py-2.5 rounded-xl
                             bg-red-50 dark:bg-red-900/20

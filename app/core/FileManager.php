@@ -9,7 +9,7 @@ class FileManager
     protected int $maxSize = 0;
     protected array $errors = [];
 
-    public function __construct(string $directory = "uploads")
+    public function __construct(string $directory = "public/uploads")
     {
         $this->directory = rtrim($directory,"/") . "/";
 

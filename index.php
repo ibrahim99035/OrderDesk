@@ -9,7 +9,7 @@ require __DIR__ . "/config/config.php";
 use App\core\Session ;
 $session = new Session ;
 $session->start() ;
-if (preg_match('/^\/uploads\//', $_SERVER["REQUEST_URI"])) {
+if (preg_match('#^/public/#', $_SERVER["REQUEST_URI"])) {
     return false;
 }
 

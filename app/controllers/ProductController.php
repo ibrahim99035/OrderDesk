@@ -67,8 +67,11 @@ class ProductController{
 
       $pro = new Product() ;
       $proud = $pro->find($id) ;
+      $file = new FileManager() ;
       if($proud){
+         $file->delete($proud["image"]) ;
          $pro->where("id=$id")->delete();
+      
          $_SESSION["success"] = "Data dleted sucsuful";
          header("Location: /products");
          
@@ -96,6 +99,7 @@ class ProductController{
 
          $_SESSION["errorsupdate"] = $request->errors();
          header("Location: /products");
+         $oldImag = null ;
 
       }else{
 
@@ -110,6 +114,8 @@ class ProductController{
                   "image/webp",
                ]);
                $path = $fileManger->upload($image) ;
+               $oldImag = $proudect["image"] ;
+               
             }else{
                $path = $proudect->image;
             }
@@ -122,6 +128,8 @@ class ProductController{
             $result = $pro->where("id=$id")->update(["name" , "description", "price" , "category_id"  ,"image" ,"is_available"] , 
                            [$data["name"] ,$data["description"], $data["price"] , $data["category_id"], $path , $data["is_available"]]) ;
             if($result){
+               $file = new FileManager() ;
+               $file->delete($oldImag) ;
                $_SESSION["success"] = "Data updated sucsuful";
                header("Location: /products");
             }else{
@@ -129,6 +137,15 @@ class ProductController{
                header("Location: /products");
             }
       }
+   }
+
+   public function toggle($id){
+      $pro = new Product() ;
+      $proudect = $pro->find($id) ;
+      if($proudect){
+         $pro->where("id=$id")->update(["is_available"]  ,[!$proudect["is_available"]? 1 : 0]) ;
+      }
+       header("Location: /products");
    }
 
 
