@@ -1,4 +1,4 @@
-<?php require __DIR__ . '/../partials/header.php'; ?>
+<?php include "layout/header.php" ; ?>
 
 <div class="min-h-screen bg-neutral-950 text-neutral-100 font-mono">
 <div class="max-w-6xl mx-auto px-6 py-12">
@@ -479,4 +479,6 @@ $fieldCls  = "flex flex-col";
     <?php endif; ?>
 </script>
 
-<?php require __DIR__ . '/../partials/footer.php'; ?>
+<?php
+include "layout/footer.php" ;
+?>
