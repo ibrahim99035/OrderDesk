@@ -2,6 +2,8 @@
 
 namespace App\core;
 
+use App\core\View;
+
 class Route
 {
     private static array $routes = [];
@@ -79,6 +81,6 @@ class Route
             }
         }
 
-        echo "404 Route Not Found";
+       View::make("404") ;
     }
 }

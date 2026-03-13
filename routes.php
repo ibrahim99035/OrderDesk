@@ -3,6 +3,7 @@
 use App\core\Route;
 use App\controllers\AuthController;
 use App\controllers\HomeController;
+use App\controllers\Index;
 use App\controllers\UserController;
 use App\controllers\ProductController;
 
@@ -27,5 +28,7 @@ Route::post("products" , [ProductController::class , "store"]) ;
 Route::post("products/delete/{id}" , [ProductController::class , "delete"]) ;
 Route::post("products/update/{id}" , [ProductController::class , "update"]) ;
 Route::get("/products/toggle/{id}" , [ProductController::class , "toggle"]) ;
+
+Route::get("/" , [Index::class,"home"]) ;
 
 

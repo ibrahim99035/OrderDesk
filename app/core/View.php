@@ -13,7 +13,8 @@ class View
         if(file_exists($path)){
             require $path;
         }else{
-            echo "View Not Found";
+            $path = __DIR__ . "/../../views/" . "404.php" ;
+            require $path ;
         }
     }
 }
