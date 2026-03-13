@@ -10,5 +10,11 @@ class Category extends Model{
             parent::__construct("categories") ;
               
         }
+
+        public function proudectCount($id){
+            $pro = new Product ;
+            $proudects = $pro->where("category_id=$id")->count() ;
+            return   $proudects ;
+        }
     }
 ?>

@@ -230,7 +230,7 @@ class Model
             return $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
         } catch (PDOException $e) {
-            return false;
+            return $e;
         }
     }
 

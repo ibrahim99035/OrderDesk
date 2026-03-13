@@ -20,10 +20,14 @@
 <?php
 
 $success = $_SESSION["success"] ?? null;
-$error   = $_SESSION["serverError"] ?? null;
+$error   = $_SESSION["error"] ?? null;
+
+
 
 unset($_SESSION["success"]);
-unset($_SESSION["serverError"]);
+unset($_SESSION["error"]);
+
+
 
 ?>
 
@@ -180,14 +184,27 @@ shadow-sm">
 
             <a href="/products/"
             class="px-3 py-1.5 rounded-md
-            bg-blue-600 text-white
-            shadow
-            hover:bg-blue-700
-            transition">
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700 text-white
+            shadow <?= $current == "proudects" ? 'bg-blue-600' : ' ' ?> transition">
 
                 Products
 
             </a>
+                     <a href="/admin/categories/"
+            class="px-3 py-1.5 rounded-md
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700 text-white
+            shadow <?= $current == "categories" ? 'bg-blue-600' : ' ' ?> transition">
+
+                categories
+
+            </a>
+
 
 
             <a href="employees.html"

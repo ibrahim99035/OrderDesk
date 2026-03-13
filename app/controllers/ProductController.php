@@ -56,7 +56,7 @@ class ProductController{
                $_SESSION["success"] = "Data added sucsuful";
                header("Location: /products");
             }else{
-               $_SESSION["serverEror"] = ["image" =>["image faild not valid only allwo jpg jpeg png webp "]];
+               $_SESSION["error"] = ["image" =>["image faild not valid only allwo jpg jpeg png webp "]];
                header("Location: /products");
             }
       }
@@ -133,7 +133,7 @@ class ProductController{
                $_SESSION["success"] = "Data updated sucsuful";
                header("Location: /products");
             }else{
-               $_SESSION["serverEror"] = ["server" =>["server error "]];
+               $_SESSION["error"] = ["server" =>["server error "]];
                header("Location: /products");
             }
       }

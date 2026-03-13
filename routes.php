@@ -2,10 +2,9 @@
 
 use App\core\Route;
 use App\controllers\AuthController;
-use App\controllers\HomeController;
-use App\controllers\Index;
 use App\controllers\UserController;
 use App\controllers\ProductController;
+use App\controllers\categoryController ;
 
 // Authentication
 Route::get("/login", [AuthController::class, 'showLogin']);
@@ -29,6 +28,13 @@ Route::post("products/delete/{id}" , [ProductController::class , "delete"]) ;
 Route::post("products/update/{id}" , [ProductController::class , "update"]) ;
 Route::get("/products/toggle/{id}" , [ProductController::class , "toggle"]) ;
 
-Route::get("/" , [Index::class,"home"]) ;
+// categories (admin)
+
+Route::get("admin/categories" , [categoryController::class , "index"]) ;
+Route::post("admin/categories" , [categoryController::class , "store"]) ;
+Route::post("admin/categories/delete/{id}" , [categoryController::class , "delete"]) ;
+Route::post("admin/categories/update/{id}" , [categoryController::class , "update"]) ;
+
+
 
 
