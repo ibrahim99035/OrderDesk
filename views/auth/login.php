@@ -38,7 +38,7 @@
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="/login" class="space-y-5">
+            <form method="POST" action="<?= BASE_URL ?>/login" class="space-y-5">
 
                 <div class="flex flex-col gap-2">
                     <label for="email" class="text-neutral-500 text-xs tracking-widest uppercase">Email</label>

@@ -7,6 +7,7 @@ use App\controllers\ProductController;
 use App\controllers\categoryController ;
 
 // Authentication
+Route::get("/", [AuthController::class, 'showLogin']);
 Route::get("/login", [AuthController::class, 'showLogin']);
 Route::post("/login", [AuthController::class, 'login']);
 Route::get("/logout", [AuthController::class, 'logout']);

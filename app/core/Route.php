@@ -49,8 +49,27 @@ class Route
         $method = $_SERVER['REQUEST_METHOD'];
 
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $uri = trim($uri,'/');
+
+        // Normalize to always include a leading slash and no trailing slash.
+        $uri = trim($uri, '/');
         $uri = $uri ? "/$uri" : "/";
+
+        // Support running the app under a subdirectory (e.g. /apps/OrderDesk or /cafeteria).
+        // Strip out the base prefix automatically so routes stay the same.
+        $bases = [];
+        if (defined('BASE_URL')) {
+            $bases[] = rtrim(BASE_URL, '/');
+        }
+        $bases[] = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+
+        foreach (array_unique($bases) as $basePath) {
+            if ($basePath !== '' && $basePath !== '/' && str_starts_with($uri, $basePath)) {
+                $uri = substr($uri, strlen($basePath));
+                $uri = trim($uri, '/');
+                $uri = $uri ? "/$uri" : "/";
+                break;
+            }
+        }
 
         if(!isset(self::$routes[$method])){
             echo "404 Route Not Found";
