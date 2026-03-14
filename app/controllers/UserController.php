@@ -38,7 +38,8 @@ class UserController extends Controller
         View::make('admin.users', compact(
             'users', 'rooms', 'current',
             'createErrors', 'createOld',
-            'editErrors',   'editOld'
+            'editErrors',   'editOld' ,
+           
         ));
     }
 

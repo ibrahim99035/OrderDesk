@@ -12,7 +12,7 @@ class AdminMiddleware
      */
     public static function handle(): void
     {
-        Session::start();
+    
 
         if (!Session::isLoggedIn()) {
             header('Location: ' . BASE_URL . '/login');

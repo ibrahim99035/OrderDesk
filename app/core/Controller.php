@@ -8,7 +8,7 @@ class Controller
 {
     public function __construct()
     {
-        Session::start();
+        
     }
 
     protected function render(string $view, array $data = []): void

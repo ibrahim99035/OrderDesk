@@ -188,7 +188,7 @@ shadow-sm">
             dark:hover:text-blue-400
             hover:bg-gray-100
             dark:hover:bg-gray-700 text-white
-            shadow <?= $current == "categories" ? 'bg-blue-600' : ' ' ?> transition">
+            shadow <?= $current == "users" ? 'bg-blue-600' : ' ' ?> transition">
 
                 users
 
