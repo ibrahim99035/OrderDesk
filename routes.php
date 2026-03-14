@@ -24,18 +24,18 @@ Route::post('/admin/users/update', [UserController::class, 'update'], [AdminMidd
 Route::post('/admin/users/delete', [UserController::class, 'delete'], [AdminMiddleware::class]);
 
 // Products (Admin)
-Route::get("products" , [ProductController::class , "index"]) ;
-Route::post("products" , [ProductController::class , "store"]) ;
-Route::post("products/delete/{id}" , [ProductController::class , "delete"]) ;
-Route::post("products/update/{id}" , [ProductController::class , "update"]) ;
-Route::get("/products/toggle/{id}" , [ProductController::class , "toggle"]) ;
+Route::get("products" , [ProductController::class , "index"] , [AdminMiddleware::class] ) ;
+Route::post("products" , [ProductController::class , "store"] , [AdminMiddleware::class] ) ;
+Route::post("products/delete/{id}" , [ProductController::class , "delete"] , [AdminMiddleware::class] ) ;
+Route::post("products/update/{id}" , [ProductController::class , "update"] , [AdminMiddleware::class] ) ;
+Route::get("/products/toggle/{id}" , [ProductController::class , "toggle"] , [AdminMiddleware::class] ) ;
 
 // categories (admin)
 
-Route::get("admin/categories" , [categoryController::class , "index"]) ;
-Route::post("admin/categories" , [categoryController::class , "store"]) ;
-Route::post("admin/categories/delete/{id}" , [categoryController::class , "delete"]) ;
-Route::post("admin/categories/update/{id}" , [categoryController::class , "update"]) ;
+Route::get("admin/categories" , [categoryController::class , "index"] ,  [AdminMiddleware::class]) ;
+Route::post("admin/categories" , [categoryController::class , "store"] ,  [AdminMiddleware::class]) ;
+Route::post("admin/categories/delete/{id}" , [categoryController::class , "delete"] , [AdminMiddleware::class] ) ;
+Route::post("admin/categories/update/{id}" , [categoryController::class , "update"] ,  [AdminMiddleware::class]) ;
 
 
 

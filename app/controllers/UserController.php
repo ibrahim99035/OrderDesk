@@ -16,7 +16,7 @@ class UserController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->requireAdmin(); // controller-level guard (belt + middleware suspenders)
+         $this->requireAdmin(); // controller-level guard (belt + middleware suspenders)
         $this->userRepo = new UserRepository();
     }
 

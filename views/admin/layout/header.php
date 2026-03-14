@@ -154,32 +154,8 @@ shadow-sm">
             </a>
 
 
-            <a href="users.html"
-            class="px-2 py-1 rounded-md
-            text-gray-700 dark:text-gray-300
-            hover:text-blue-600
-            dark:hover:text-blue-400
-            hover:bg-gray-100
-            dark:hover:bg-gray-700
-            transition">
+       
 
-                Users
-
-            </a>
-
-
-            <a href="orders.html"
-            class="px-2 py-1 rounded-md
-            text-gray-700 dark:text-gray-300
-            hover:text-blue-600
-            dark:hover:text-blue-400
-            hover:bg-gray-100
-            dark:hover:bg-gray-700
-            transition">
-
-                Orders
-
-            </a>
 
 
             <a href="/products/"
@@ -205,48 +181,20 @@ shadow-sm">
 
             </a>
 
-
-
-            <a href="employees.html"
-            class="px-2 py-1 rounded-md
-            text-gray-700 dark:text-gray-300
+                </a>
+            <a href="/admin/users/"
+            class="px-3 py-1.5 rounded-md
             hover:text-blue-600
             dark:hover:text-blue-400
             hover:bg-gray-100
-            dark:hover:bg-gray-700
-            transition">
+            dark:hover:bg-gray-700 text-white
+            shadow <?= $current == "categories" ? 'bg-blue-600' : ' ' ?> transition">
 
-                Employees
+                users
 
             </a>
 
 
-            <a href="payments.html"
-            class="px-2 py-1 rounded-md
-            text-gray-700 dark:text-gray-300
-            hover:text-blue-600
-            dark:hover:text-blue-400
-            hover:bg-gray-100
-            dark:hover:bg-gray-700
-            transition">
-
-                Payments
-
-            </a>
-
-
-            <a href="settings.html"
-            class="px-2 py-1 rounded-md
-            text-gray-700 dark:text-gray-300
-            hover:text-blue-600
-            dark:hover:text-blue-400
-            hover:bg-gray-100
-            dark:hover:bg-gray-700
-            transition">
-
-                Settings
-
-            </a>
 
 
         </div>

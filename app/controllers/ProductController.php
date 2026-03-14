@@ -8,6 +8,11 @@ use App\models\Category;
 
 class ProductController{
 
+   public function __construct()
+   {
+       
+   }
+
 
    public function index(){
 
