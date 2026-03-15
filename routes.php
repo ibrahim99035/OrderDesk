@@ -5,7 +5,9 @@ use App\controllers\AuthController;
 use App\Middleware\AdminMiddleware;
 use App\controllers\UserController;
 use App\controllers\ProductController;
-use App\controllers\categoryController ;
+use App\controllers\categoryController;
+use App\controllers\HomeController;
+
 
 // Authentication
 Route::get( '/login',  [AuthController::class, 'showLogin']);
@@ -14,8 +16,8 @@ Route::post('/login',  [AuthController::class, 'login']);
 Route::get( '/logout', [AuthController::class, 'logout']);
 
 //Home (after login)
-// Route::get("/admin/home", [HomeController::class, 'admin']);
-// Route::get("/home", [HomeController::class, 'user']);
+Route::get("/admin/home", [HomeController::class, 'admin']);
+Route::get("/home", [HomeController::class, 'user']);
 
 // User management (Admin)
 Route::get( '/admin/users',        [UserController::class, 'index'],  [AdminMiddleware::class]);
