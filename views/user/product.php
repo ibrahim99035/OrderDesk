@@ -229,6 +229,22 @@ setTimeout(()=>{
                     class="animate-bounce-in absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full bg-white text-brand-600 text-xs font-black flex items-center justify-center shadow"
                 ></span>
             </button>
+
+        <a
+        href="/logout"
+        class="px-4 py-2
+        rounded-lg
+        bg-red-600
+        hover:bg-red-700
+        text-white
+        font-semibold
+        shadow
+        transition
+        hover:scale-105">
+
+            Logout
+
+        </a>
         </div>
     </div>
 </header>

@@ -18,7 +18,7 @@ Route::get( '/logout', [AuthController::class, 'logout']);
 
 //Home (after login)
 Route::get("/admin/home", [HomeController::class, 'admin'] , [AdminMiddleware::class]);
-Route::get("/admin/home", [HomeController::class, 'user'] , [AdminMiddleware::class]);
+Route::get("/home", [HomeController::class, 'user'] , [AuthMiddleware::class]);
 
 // User management (Admin)
 // Route::get( '/admin/users',        [UserController::class, 'index'],  [AdminMiddleware::class]);
