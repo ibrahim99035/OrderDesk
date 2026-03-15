@@ -6,6 +6,7 @@ use App\Middleware\AdminMiddleware;
 use App\controllers\UserController;
 use App\controllers\ProductController;
 use App\controllers\categoryController;
+use App\controllers\OrderController;
 use App\controllers\HomeController;
 
 
@@ -41,4 +42,40 @@ Route::post("admin/categories/update/{id}" , [categoryController::class , "updat
 
 
 
+// ================================================================
+// ADMIN + OFFICE BOY
+// ================================================================
+
+// ✅ Static routes FIRST
+Route::get("/orders",                  [OrderController::class, 'index']);
+Route::get("/orders/manual",           [OrderController::class, 'manualOrder']);
+Route::post("/orders/manual",          [OrderController::class, 'manualOrder']);
+
+// Filter by status - static
+Route::get("/orders/processing",       [OrderController::class, 'processingOrders']);
+Route::get("/orders/out_for_delivery", [OrderController::class, 'outForDeliveryOrders']);
+Route::get("/orders/done",             [OrderController::class, 'doneOrders']);
+Route::get("/orders/cancelled",        [OrderController::class, 'cancelledOrders']);
+
+Route::get("/office-boy", [OrderController::class, 'officeBoyIndex']);
+
+// ✅ {id} routes LAST
+Route::get("/orders/view/{id}",        [OrderController::class, 'view']);
+Route::post("/orders/update/{id}",     [OrderController::class, 'update']);
+Route::post("/orders/delete/{id}",     [OrderController::class, 'delete']);
+Route::post("/orders/confirm/{id}",    [OrderController::class, 'confirmOrder']);
+Route::post("/orders/deliver/{id}",    [OrderController::class, 'deliverOrder']);
+Route::post("/orders/complete/{id}",   [OrderController::class, 'complete']);
+Route::post("/orders/cancel/{id}",     [OrderController::class, 'cancelOrder']);
+
+// ================================================================
+// USER
+// ================================================================
+
+// ✅ Static first
+Route::get("/orders/my",               [OrderController::class, 'myOrders']);
+Route::post("/orders/cancel",          [OrderController::class, 'cancelOrder']);
+
+// ✅ {id} last
+Route::get("/orders/my/{id}",          [OrderController::class, 'showMyOrder']);
 

@@ -225,8 +225,8 @@ shadow-sm">
 
 
         <!-- LOGOUT -->
-        <button
-        onclick="logout()"
+        <a
+        href="/logout"
         class="px-4 py-2
         rounded-lg
         bg-red-600
@@ -239,7 +239,7 @@ shadow-sm">
 
             Logout
 
-        </button>
+</a>
 
 
     </div>
