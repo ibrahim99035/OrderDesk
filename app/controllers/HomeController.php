@@ -35,10 +35,12 @@ class HomeController
 
         $userId = (int) Session::get('user_id');
 
+        $latestOrder = $this->orderRepo->latestByUser($userId);
+
         View::make('user.home', [
-            'products'    => $this->productRepo->allAvailable(),
-            'rooms'       => $this->roomRepo->allRooms(),
-            'latestOrder' => $this->orderRepo->latestByUser($userId),
+            'products'    => $this->productRepo->allAvailable() ?: [],
+            'rooms'       => $this->roomRepo->allRooms() ?: [],
+            'latestOrder' => $latestOrder ?: null,
         ]);
     }
 
@@ -57,11 +59,13 @@ class HomeController
 
         $userId = (int) Session::get('user_id');
 
+        $latestOrder = $this->orderRepo->latestByUser($userId);
+
         View::make('admin.home', [
-            'products'    => $this->productRepo->allAvailable(),
-            'rooms'       => $this->roomRepo->allRooms(),
-            'latestOrder' => $this->orderRepo->latestByUser($userId),
-            'users'       => $this->userRepo->allWithRoom(),
+            'products'    => $this->productRepo->allAvailable() ?: [],
+            'rooms'       => $this->roomRepo->allRooms() ?: [],
+            'latestOrder' => $latestOrder ?: null,
+            'users'       => $this->userRepo->allWithRoom() ?: [],
         ]);
     }
 }
