@@ -7,7 +7,8 @@ use App\controllers\UserController;
 use App\controllers\ProductController;
 use App\controllers\categoryController;
 use App\controllers\HomeController;
-
+use App\controllers\UserProudectController;
+use App\Middleware\AuthMiddleware;
 
 // Authentication
 Route::get( '/login',  [AuthController::class, 'showLogin']);
@@ -16,14 +17,17 @@ Route::post('/login',  [AuthController::class, 'login']);
 Route::get( '/logout', [AuthController::class, 'logout']);
 
 //Home (after login)
-Route::get("/admin/home", [HomeController::class, 'admin']);
-Route::get("/home", [HomeController::class, 'user']);
+Route::get("/admin/home", [HomeController::class, 'admin'] , [AdminMiddleware::class]);
+Route::get("/admin/home", [HomeController::class, 'user'] , [AdminMiddleware::class]);
 
 // User management (Admin)
-Route::get( '/admin/users',        [UserController::class, 'index'],  [AdminMiddleware::class]);
+// Route::get( '/admin/users',        [UserController::class, 'index'],  [AdminMiddleware::class]);
 Route::post('/admin/users/store',  [UserController::class, 'store'],  [AdminMiddleware::class]);
 Route::post('/admin/users/update', [UserController::class, 'update'], [AdminMiddleware::class]);
 Route::post('/admin/users/delete', [UserController::class, 'delete'], [AdminMiddleware::class]);
+
+
+
 
 // Products (Admin)
 Route::get("products" , [ProductController::class , "index"] , [AdminMiddleware::class] ) ;
@@ -40,5 +44,8 @@ Route::post("admin/categories/delete/{id}" , [categoryController::class , "delet
 Route::post("admin/categories/update/{id}" , [categoryController::class , "update"] ,  [AdminMiddleware::class]) ;
 
 
+// user 
+Route::get("product" , [UserProudectController::class , "index"] , [AuthMiddleware::class]);
 
+Route::post("checkout" , [UserProudectController::class , "checkout"],[AuthMiddleware::class]) ;
 

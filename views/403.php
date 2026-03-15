@@ -66,7 +66,7 @@
         </p>
 
         <!-- button -->
-        <a href="/"
+        <a href="/product"
            class="inline-block px-6 py-3 rounded-xl
            bg-red-600 hover:bg-red-700
            transition duration-300

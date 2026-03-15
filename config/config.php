@@ -7,7 +7,7 @@ define('DB_USER', getenv('DB_USER'));
 define('DB_PASS', getenv('DB_PASS'));
 
 //Application
-define('BASE_URL', '/apps/OrderDesk');
+define('BASE_URL', '');
 define('APP_NAME',   'OrderDesk');
 
 //File Uploads
