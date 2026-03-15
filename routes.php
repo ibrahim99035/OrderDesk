@@ -6,6 +6,7 @@ use App\Middleware\AdminMiddleware;
 use App\controllers\UserController;
 use App\controllers\ProductController;
 use App\controllers\categoryController ;
+use App\controllers\CheckController;
 
 // Authentication
 Route::get( '/login',  [AuthController::class, 'showLogin']);
@@ -37,6 +38,7 @@ Route::post("admin/categories" , [categoryController::class , "store"] ,  [Admin
 Route::post("admin/categories/delete/{id}" , [categoryController::class , "delete"] , [AdminMiddleware::class] ) ;
 Route::post("admin/categories/update/{id}" , [categoryController::class , "update"] ,  [AdminMiddleware::class]) ;
 
-
+// Checks (Admin)
+Route::get('/admin/checks', [CheckController::class, 'index'], [AdminMiddleware::class]);
 
 
