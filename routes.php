@@ -6,6 +6,7 @@ use App\Middleware\AdminMiddleware;
 use App\controllers\UserController;
 use App\controllers\ProductController;
 use App\controllers\categoryController ;
+use App\controllers\UserProudectController;
 
 // Authentication
 Route::get( '/login',  [AuthController::class, 'showLogin']);
@@ -36,6 +37,11 @@ Route::get("admin/categories" , [categoryController::class , "index"] ,  [AdminM
 Route::post("admin/categories" , [categoryController::class , "store"] ,  [AdminMiddleware::class]) ;
 Route::post("admin/categories/delete/{id}" , [categoryController::class , "delete"] , [AdminMiddleware::class] ) ;
 Route::post("admin/categories/update/{id}" , [categoryController::class , "update"] ,  [AdminMiddleware::class]) ;
+
+
+// user proudect
+
+Route::get("user/proudects" , [UserProudectController::class , "index"]) ;
 
 
 
