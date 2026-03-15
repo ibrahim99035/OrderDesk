@@ -22,7 +22,7 @@ Route::get("/admin/home", [HomeController::class, 'admin'] , [AdminMiddleware::c
 Route::get("/home", [HomeController::class, 'user'] , [AuthMiddleware::class]);
 
 // User management (Admin)
-// Route::get( '/admin/users',        [UserController::class, 'index'],  [AdminMiddleware::class]);
+Route::get( '/admin/users',        [UserController::class, 'index'],  [AdminMiddleware::class]);
 Route::post('/admin/users/store',  [UserController::class, 'store'],  [AdminMiddleware::class]);
 Route::post('/admin/users/update', [UserController::class, 'update'], [AdminMiddleware::class]);
 Route::post('/admin/users/delete', [UserController::class, 'delete'], [AdminMiddleware::class]);

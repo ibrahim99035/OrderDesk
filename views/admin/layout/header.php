@@ -140,7 +140,7 @@ shadow-sm">
         <div class="hidden md:flex items-center gap-6 text-sm font-medium">
 
 
-            <a href="dashboard.html"
+            <a href="/admin/home"
             class="px-2 py-1 rounded-md
             text-gray-700 dark:text-gray-300
             hover:text-blue-600
