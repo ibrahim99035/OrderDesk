@@ -1,5 +1,11 @@
-<?php include "views/admin/layout/header.php"; ?>
 
+<?php
+/** @var array $users */
+/** @var array $rooms */
+/** @var array $products */
+/** @var array $orders */
+include "views/admin/layout/header.php";
+?>
 <div class="max-w-5xl mx-auto px-6 py-8">
 
     <div class="flex justify-between items-center mb-8">

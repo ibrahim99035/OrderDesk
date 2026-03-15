@@ -1,4 +1,10 @@
 <?php include "views/admin/layout/header.php"; ?>
+<?php
+/** @var array $users */
+/** @var array $rooms */
+/** @var array $products */
+include "views/admin/layout/header.php";
+?>
 <div class="max-w-2xl mx-auto px-6 py-8">
 
     <a href="/orders" class="inline-flex items-center gap-2 text-gray-500 hover:text-blue-600 mb-6 transition">
