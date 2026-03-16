@@ -37,7 +37,9 @@ class OrderRepository
         ";
 
         $params     = [];
-        $conditions = ["o.status = 'done'"];
+        //$conditions = ["o.status = 'done'"];
+        // for test
+        $conditions = ["o.status != 'cancelled'"];
 
         if ($userId > 0) {
             $conditions[]      = "o.user_id = :user_id";
