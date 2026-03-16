@@ -1,7 +1,4 @@
-<?php
-/** @var array $order */
-include "views/admin/layout/header.php";
-?>
+<?php include __DIR__ . "/../layout/header.php"; ?>
 <div class="max-w-2xl mx-auto px-4 py-8">
 
     <a href="/orders/my" class="inline-flex items-center gap-2 text-gray-500 hover:text-blue-600 mb-6 transition">
@@ -58,7 +55,7 @@ include "views/admin/layout/header.php";
             <?php foreach ($order['items'] as $item): ?>
             <div class="flex justify-between items-center py-3">
                 <div>
-                    <p class="font-semibold text-gray-900 dark:text-white">Product #<?= $item['product_id'] ?></p>
+                    <p class="font-semibold text-gray-900 dark:text-white">Product #<?= $item['name'] ?></p>
                     <p class="text-sm text-gray-500">× <?= $item['quantity'] ?> @ <?= number_format($item['unit_price'], 2) ?> EGP</p>
                 </div>
                 <span class="font-bold text-gray-900 dark:text-white">

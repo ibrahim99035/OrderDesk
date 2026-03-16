@@ -60,34 +60,34 @@ Route::post("checkout" , [UserProudectController::class , "checkout"],[AuthMiddl
 // ================================================================
 
 // ✅ Static routes FIRST
-Route::get("/orders",                  [OrderController::class, 'index']);
-Route::get("/orders/manual",           [OrderController::class, 'manualOrder']);
-Route::post("/orders/manual",          [OrderController::class, 'manualOrder']);
+Route::get("/orders",                  [OrderController::class, 'index'], [AdminMiddleware::class]);
+Route::get("/orders/manual",           [OrderController::class, 'manualOrder'], [AdminMiddleware::class]);
+Route::post("/orders/manual",          [OrderController::class, 'manualOrder'], [AdminMiddleware::class]);
 
 // Filter by status - static
-Route::get("/orders/processing",       [OrderController::class, 'processingOrders']);
-Route::get("/orders/out_for_delivery", [OrderController::class, 'outForDeliveryOrders']);
-Route::get("/orders/done",             [OrderController::class, 'doneOrders']);
-Route::get("/orders/cancelled",        [OrderController::class, 'cancelledOrders']);
+Route::get("/orders/processing",       [OrderController::class, 'processingOrders'], [AdminMiddleware::class]);
+Route::get("/orders/out_for_delivery", [OrderController::class, 'outForDeliveryOrders'], [AdminMiddleware::class]);
+Route::get("/orders/done",             [OrderController::class, 'doneOrders'], [AdminMiddleware::class]);
+Route::get("/orders/cancelled",        [OrderController::class, 'cancelledOrders'], [AdminMiddleware::class]);
 
-Route::get("/office-boy", [OrderController::class, 'officeBoyIndex']);
+Route::get("/office-boy", [OrderController::class, 'officeBoyIndex'], [AdminMiddleware::class]);
 
 // ✅ {id} routes LAST
-Route::get("/orders/view/{id}",        [OrderController::class, 'view']);
-Route::post("/orders/update/{id}",     [OrderController::class, 'update']);
-Route::post("/orders/delete/{id}",     [OrderController::class, 'delete']);
-Route::post("/orders/confirm/{id}",    [OrderController::class, 'confirmOrder']);
-Route::post("/orders/deliver/{id}",    [OrderController::class, 'deliverOrder']);
-Route::post("/orders/complete/{id}",   [OrderController::class, 'complete']);
-Route::post("/orders/cancel/{id}",     [OrderController::class, 'cancelOrder']);
+Route::get("/orders/view/{id}",        [OrderController::class, 'view'], [AdminMiddleware::class]);
+Route::post("/orders/update/{id}",     [OrderController::class, 'update'], [AdminMiddleware::class]);
+Route::post("/orders/delete/{id}",     [OrderController::class, 'delete'], [AdminMiddleware::class]);
+Route::post("/orders/confirm/{id}",    [OrderController::class, 'confirmOrder'], [AdminMiddleware::class]);
+Route::post("/orders/deliver/{id}",    [OrderController::class, 'deliverOrder'], [AdminMiddleware::class]);
+Route::post("/orders/complete/{id}",   [OrderController::class, 'complete'], [AdminMiddleware::class]);
+Route::post("/orders/cancel/{id}",     [OrderController::class, 'cancelOrder'], [AdminMiddleware::class]);
 
 // ================================================================
 // USER
 // ================================================================
 
 // ✅ Static first
-Route::get("/orders/my",               [OrderController::class, 'myOrders']);
-Route::post("/orders/cancel",          [OrderController::class, 'cancelOrder']);
+Route::get("/orders/my",               [OrderController::class, 'myOrders'], [AuthMiddleware::class]);
+Route::post("/orders/cancel",          [OrderController::class, 'cancelOrder'], [AuthMiddleware::class]);
 
 // ✅ {id} last
-Route::get("/orders/my/{id}",          [OrderController::class, 'showMyOrder']);
+Route::get("/orders/my/{id}",          [OrderController::class, 'showMyOrder'], [AuthMiddleware::class]);

@@ -19,7 +19,7 @@ class UserProudectController{
         
         if(isset($_GET["id"]) ){
             $id = $_GET['id'] ;
-            $proudects = $pro->where("catgory_id=$id")->get() ;
+            $proudects = $pro->where("category_id=$id")->get() ;
         }else{
             $proudects = $pro->all() ;
         }
@@ -41,9 +41,12 @@ class UserProudectController{
             $room_id = $_POST["room_id"];
 
             $order = new Order;
-
+            if(!isset($_SESSION["user_id"])){
+                header("Location: /login");
+                exit;
+            }
             $order->insert(["user_id" , "room_id" , "total"  ],
-            [1 , $room_id , 0]);
+            [$_SESSION["user_id"] , $room_id , 0]);
             $conn = Database::getConnection();
 
             $order_id = $conn->lastInsertId();

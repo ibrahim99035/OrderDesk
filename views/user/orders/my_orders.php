@@ -1,5 +1,4 @@
-<?php include "views/admin/layout/header.php"; ?>
-
+<?php include __DIR__ . "/../layout/header.php"; ?>
 <div class="max-w-3xl mx-auto px-4 py-8">
 
     <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">📦 My Orders</h2>
@@ -41,7 +40,14 @@
             <div class="mb-3 space-y-1">
                 <?php foreach ($order['items'] as $item): ?>
                 <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                    <span>× <?= $item['quantity'] ?> Product #<?= $item['product_id'] ?></span>
+                    <div class="flex items-center gap-3">
+                        <img src="/<?= $item['image'] ?>"
+                            class="w-10 h-10 rounded object-cover">
+
+                        <span>
+                            × <?= $item['quantity'] ?> <?= $item['name'] ?>
+                        </span>
+                    </div>
                     <span><?= number_format($item['unit_price'] * $item['quantity'], 2) ?> EGP</span>
                 </div>
                 <?php endforeach; ?>
@@ -67,14 +73,11 @@
                 </a>
 
                 <?php if (in_array($order['status'], ['processing', 'out_for_delivery'])): ?>
-                <form method="POST" action="/orders/cancel"
-                      onsubmit="return confirm('Are you sure you want to cancel this order?')">
-                    <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                    <button type="submit"
-                            class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-semibold transition">
-                        ❌ Cancel
-                    </button>
-                </form>
+                <button type="button"
+                        onclick="openCancelModal(<?= $order['id'] ?>)"
+                        class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-semibold transition">
+                    ❌ Cancel
+                </button>
                 <?php endif; ?>
             </div>
 
@@ -84,4 +87,50 @@
     <?php endif; ?>
 </div>
 
-<?php include "views/admin/layout/footer.php"; ?>
+
+<!-- Cancel Modal -->
+<div id="cancelModal"
+     class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-80">
+
+        <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+            Cancel Order ?
+        </h3>
+
+        <form method="POST" action="/orders/cancel">
+
+            <input type="hidden" name="order_id" id="cancelOrderId">
+
+            <div class="flex justify-end gap-3">
+
+                <button type="button"
+                        onclick="closeCancelModal()"
+                        class="px-3 py-2 bg-gray-200 rounded">
+                    No
+                </button>
+
+                <button type="submit"
+                        class="px-3 py-2 bg-red-600 text-white rounded">
+                    Yes Cancel
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+function openCancelModal(id) {
+    document.getElementById("cancelModal").classList.remove("hidden");
+    document.getElementById("cancelModal").classList.add("flex");
+    document.getElementById("cancelOrderId").value = id;
+}
+
+function closeCancelModal() {
+    document.getElementById("cancelModal").classList.add("hidden");
+}
+</script>

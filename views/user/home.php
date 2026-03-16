@@ -3,7 +3,7 @@ $latestOrder = $latestOrder ?? null;
 $products    = $products    ?? [];
 $rooms       = $rooms       ?? [];
 ?>
-<?php include __DIR__ . "/../admin/layout/header.php"; ?>
+<?php include "layout/header.php" ?>
 
 <div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
 <div class="max-w-4xl mx-auto">

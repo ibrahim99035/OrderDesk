@@ -46,18 +46,29 @@ class OrderController {
             header("Location: /orders/my");
         }
     }
+    private function attachItems(array &$orders): void
+    {
+        $conn = \App\core\Database::getConnection();
 
-private function attachItems(array &$orders): void
-{
-    $itemModel = new \App\core\Model('order_items');
-    foreach ($orders as &$order) {
-        $order['items'] = $itemModel
-            ->where("order_id = {$order['id']}")
-            ->get();
+        foreach ($orders as &$order) {
+
+            $stmt = $conn->prepare("
+                SELECT 
+                    oi.*,
+                    p.name,
+                    p.image
+                FROM order_items oi
+                JOIN products p ON p.id = oi.product_id
+                WHERE oi.order_id = ?
+            ");
+
+            $stmt->execute([$order['id']]);
+
+            $order['items'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        unset($order);
     }
-    unset($order);
-}
-
 public function index()
 {
     // $this->requireRole(['admin']);
@@ -501,7 +512,7 @@ public function manualOrder()
                                ->orderBy("created_at", "DESC")
                                ->get();
         $this->attachItems($orders);
- 
+       
         View::make("user.orders.my_orders", ["orders" => $orders]);
     }
     // ================================================================
