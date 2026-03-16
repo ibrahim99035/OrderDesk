@@ -49,7 +49,7 @@ include "components/proudects/edit.php" ;
         })
 
         console.log(proudect.id)
-        document.getElementById("editForm").action = "products/update/" + proudect.id ;
+        document.getElementById("editForm").action = "/products/update/" + proudect.id ;
 
     }
 

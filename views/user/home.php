@@ -72,7 +72,7 @@ $rooms       = $rooms       ?? [];
                 <?php foreach ($products as $product): ?>
                 <div class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <?php if (!empty($product['image'])): ?>
-                        <img src="/public/uploads/products/<?= htmlspecialchars($product['image']) ?>"
+                        <img src="/<?= htmlspecialchars($product['image']) ?>"
                              class="w-12 h-12 object-cover rounded-xl border border-gray-100 dark:border-gray-700" alt="">
                     <?php else: ?>
                         <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-xl flex items-center justify-center text-xl">
@@ -105,4 +105,4 @@ $rooms       = $rooms       ?? [];
 </div>
 </div>
 
-<?php include __DIR__ . "/../admin/layout/footer.php"; ?>
+<?php include "layout/footer.php" ?>

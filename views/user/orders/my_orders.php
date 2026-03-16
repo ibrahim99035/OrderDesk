@@ -134,3 +134,6 @@ function closeCancelModal() {
     document.getElementById("cancelModal").classList.add("hidden");
 }
 </script>
+
+
+<?php include __DIR__ . "/../layout/footer.php"; ?>

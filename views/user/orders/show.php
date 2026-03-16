@@ -87,4 +87,4 @@
 
 </div>
 
-<?php include "views/admin/layout/footer.php"; ?>
+<?php include __DIR__ . "/../layout/footer.php"; ?>
