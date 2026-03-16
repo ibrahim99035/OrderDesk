@@ -63,7 +63,7 @@ class CheckController extends Controller
         ";
 
         $params     = [];
-        $conditions = [];
+        $conditions = ["o.status = 'done'"];
 
         if ($userId > 0) {
             $conditions[]        = "o.user_id = :user_id";
@@ -143,7 +143,7 @@ class CheckController extends Controller
         $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
 
         $stmt = $conn->prepare("
-            SELECT oi.order_id, p.name AS product_name, oi.quantity, oi.unit_price
+            SELECT oi.order_id, p.name AS product_name, p.image AS product_image, oi.quantity, oi.unit_price
             FROM order_items oi
             INNER JOIN products p ON p.id = oi.product_id
             WHERE oi.order_id IN ($placeholders)
@@ -155,9 +155,10 @@ class CheckController extends Controller
         $map = [];
         foreach ($rows as $row) {
             $map[(int) $row['order_id']][] = [
-                'product_name' => $row['product_name'],
-                'quantity'     => (int) $row['quantity'],
-                'unit_price'   => (float) $row['unit_price'],
+                'product_name'  => $row['product_name'],
+                'product_image' => $row['product_image'],
+                'quantity'      => (int) $row['quantity'],
+                'unit_price'    => (float) $row['unit_price'],
             ];
         }
 

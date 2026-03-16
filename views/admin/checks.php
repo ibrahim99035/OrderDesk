@@ -114,7 +114,10 @@
                                                                 <td colspan="3" class="pl-8 pr-4 pb-3">
                                                                     <div class="flex flex-wrap gap-2">
                                                                         <?php foreach ($order['items'] as $item): ?>
-                                                                            <span class="inline-block bg-gray-200 dark:bg-gray-700 rounded-lg px-3 py-1 text-xs">
+                                                                            <span class="inline-flex items-center gap-1 bg-gray-200 dark:bg-gray-700 rounded-lg px-3 py-1 text-xs">
+                                                                                <?php if (!empty($item['product_image'])): ?>
+                                                                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($item['product_image']) ?>" alt="" class="w-5 h-5 rounded object-cover">
+                                                                                <?php endif; ?>
                                                                                 <?= htmlspecialchars($item['product_name']) ?>
                                                                                 &times;<?= $item['quantity'] ?>
                                                                                 <span class="text-gray-500 dark:text-gray-400">(<?= number_format($item['unit_price'], 2) ?>)</span>
