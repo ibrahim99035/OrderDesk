@@ -65,9 +65,9 @@ class AuthController extends Controller
     private function redirectByRole(): void
     {
         if (Session::isAdmin()) {
-            $this->redirect('/admin/users');
+            $this->redirect('/admin');
         } else {
-            $this->redirect('/home');
+            $this->redirect('/');
         }
     }
 }

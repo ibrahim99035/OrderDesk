@@ -8,6 +8,7 @@ use App\models\Order;
 use App\models\OrderItem;
 use App\models\Product;
 use App\models\Room;
+use App\models\User;
 use App\request\AddOrders;
 use Exception;
 
@@ -38,12 +39,20 @@ class UserProudectController{
                 return "validation error";
             }
             $cart = json_decode($_POST["cart"], true);
-            $room_id = $_POST["room_id"];
+        
 
             $order = new Order;
             if(!isset($_SESSION["user_id"])){
                 header("Location: /login");
                 exit;
+            }
+            $user = (new User)->find($_SESSION["user_id"]) ;
+        
+            if(isset($_POST["room_id"]) &&  !empty($_POST["room_id"]) ){
+                $room_id = $_POST["room_id"];
+            }else{
+                $room_id = $user["room_id"] ;
+                var_dump($user) ;
             }
             $order->insert(["user_id" , "room_id" , "total"  ],
             [$_SESSION["user_id"] , $room_id , 0]);

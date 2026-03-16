@@ -41,6 +41,7 @@ class HomeController
             'products'    => $this->productRepo->allAvailable() ?: [],
             'rooms'       => $this->roomRepo->allRooms() ?: [],
             'latestOrder' => $latestOrder ?: null,
+            "current" => "home"
         ]);
     }
 
@@ -66,6 +67,7 @@ class HomeController
             'rooms'       => $this->roomRepo->allRooms() ?: [],
             'latestOrder' => $latestOrder ?: null,
             'users'       => $this->userRepo->allWithRoom() ?: [],
+             "current" => "home"
         ]);
     }
 }

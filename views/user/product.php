@@ -385,10 +385,6 @@ function cafeteriaApp() {
 
                 if (this.cart.length === 0) return;
 
-                if (!this.selectedRoom) {
-                    this.showToast("choose room", "⚠️");
-                    return;
-                }
 
                 const form = document.createElement("form");
 
@@ -411,6 +407,7 @@ function cafeteriaApp() {
                 const roomInput = document.createElement("input");
 
                 roomInput.type = "hidden";
+               
 
                 roomInput.name = "room_id";
 

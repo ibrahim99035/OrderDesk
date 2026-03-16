@@ -14,13 +14,16 @@ use App\Middleware\AuthMiddleware;
 
 // Authentication
 Route::get( '/login',  [AuthController::class, 'showLogin']);
-Route::get( '/',       [AuthController::class, 'showLogin']);
+// Route::get( '/',       [AuthController::class, 'showLogin']);
 Route::post('/login',  [AuthController::class, 'login']);
 Route::get( '/logout', [AuthController::class, 'logout']);
 
 //Home (after login)
+Route::get("/admin", [HomeController::class, 'admin'] , [AdminMiddleware::class]);
+Route::get("/", [HomeController::class, 'user'] , [AuthMiddleware::class]);
 Route::get("/admin/home", [HomeController::class, 'admin'] , [AdminMiddleware::class]);
 Route::get("/home", [HomeController::class, 'user'] , [AuthMiddleware::class]);
+
 
 // User management (Admin)
 Route::get( '/admin/users',        [UserController::class, 'index'],  [AdminMiddleware::class]);

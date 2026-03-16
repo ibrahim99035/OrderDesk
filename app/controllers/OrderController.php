@@ -74,7 +74,7 @@ public function index()
     // $this->requireRole(['admin']);
     $orders = (new Order())->all();
     $room = new Room ;
-    View::make("admin.orders.index", ["orders" => $orders , "rooms"    => $room->all(),]);
+    View::make("admin.orders.index", ["orders" => $orders , "rooms"    => $room->all(),"current" => "orders"]);
 }
 // ================================================================
     // ADMIN — VIEW SINGLE ORDER
@@ -423,7 +423,7 @@ public function manualOrder()
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $room = new Room ;
-        var_dump($room->all()) ;
+       
         View::make("admin.orders.manual_order", [
             "products" => (new Product())->where("is_available = 1")->get(),
             "users"    => (new User())->where("is_active = 1")->get(),

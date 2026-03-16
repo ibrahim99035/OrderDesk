@@ -8,7 +8,7 @@ class AuthMiddleware
 {
     public static function handle(): void
     {
-        if (!Session::isLoggedIn()) {
+        if (!Session::isUser()) {
             header('Location: ' . BASE_URL . '/login');
             exit;
         }

@@ -55,4 +55,9 @@ class Session
     {
         return ($_SESSION['role'] ?? '') === 'admin';
     }
+
+      public static function isUser(): bool
+    {
+        return ($_SESSION['role'] ?? '') === 'user';
+    }
 }

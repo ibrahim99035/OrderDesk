@@ -11,8 +11,6 @@ class AddOrders extends Request{
 
             "cart" => "required|string",
 
-            "room_id" => "required|int",
-
         ];
     }
 }

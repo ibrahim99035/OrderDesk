@@ -146,7 +146,7 @@ shadow-sm">
             hover:text-blue-600
             dark:hover:text-blue-400
             hover:bg-gray-100
-            dark:hover:bg-gray-700
+            dark:hover:bg-gray-700 <?= $current == "home" ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300'  ?>
             transition">
 
                 Dashboard
@@ -159,7 +159,7 @@ shadow-sm">
             hover:text-blue-600
             dark:hover:text-blue-400
             hover:bg-gray-100
-            dark:hover:bg-gray-700
+            dark:hover:bg-gray-700  <?= $current == "orders" ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300'  ?>
             transition">
 
                 orders
@@ -174,8 +174,8 @@ shadow-sm">
             hover:text-blue-600
             dark:hover:text-blue-400
             hover:bg-gray-100
-            dark:hover:bg-gray-700 text-white
-            shadow <?= $current == "proudects" ? 'bg-blue-600' : ' ' ?> transition">
+            dark:hover:bg-gray-700 text-black 
+            shadow <?= $current == "proudects" ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300' ?> transition">
 
                 Products
 
@@ -186,7 +186,7 @@ shadow-sm">
             dark:hover:text-blue-400
             hover:bg-gray-100
             dark:hover:bg-gray-700 text-white
-            shadow <?= $current == "categories" ? 'bg-blue-600' : ' ' ?> transition">
+            shadow <?= $current == "categories" ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300' ?> transition">
 
                 categories
 
@@ -199,7 +199,7 @@ shadow-sm">
             dark:hover:text-blue-400
             hover:bg-gray-100
             dark:hover:bg-gray-700 text-white
-            shadow <?= $current == "users" ? 'bg-blue-600' : ' ' ?> transition">
+            shadow <?= $current == "users" ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300'  ?> transition">
 
                 users
 
@@ -211,7 +211,7 @@ shadow-sm">
             dark:hover:text-blue-400
             hover:bg-gray-100
             dark:hover:bg-gray-700 text-white
-            shadow <?= $current == "checks" ? 'bg-blue-600' : ' ' ?> transition">
+            shadow <?= $current == "checks" ? 'bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300'  ?> transition">
 
                 checks
 
