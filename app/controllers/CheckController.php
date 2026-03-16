@@ -4,14 +4,18 @@ namespace App\controllers;
 
 use App\core\Controller;
 use App\core\Database;
+use App\repositories\OrderRepository;
 use PDO;
 
 class CheckController extends Controller
 {
+    private OrderRepository $orderRepo;
+
     public function __construct()
     {
         parent::__construct();
         $this->requireAdmin();
+        $this->orderRepo = new OrderRepository();
     }
 
     public function index(): void
@@ -20,7 +24,7 @@ class CheckController extends Controller
         $dateFrom = $this->get('date_from', '');
         $dateTo   = $this->get('date_to', '');
         $users    = $this->fetchUsers();
-        $results  = $this->fetchChecks($userId, $dateFrom, $dateTo);
+        $results  = $this->orderRepo->checksData($dateFrom, $dateTo, $userId);
 
         $this->render('admin/checks', [
             'current'  => 'checks',
@@ -32,7 +36,6 @@ class CheckController extends Controller
         ]);
     }
 
-  
     private function fetchUsers(): array
     {
         $conn = Database::getConnection();
@@ -44,124 +47,5 @@ class CheckController extends Controller
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
- 
-    private function fetchChecks(int $userId = 0, string $dateFrom = '', string $dateTo = ''): array
-    {
-        $conn = Database::getConnection();
-
-        $sql = "
-            SELECT
-                o.id,
-                o.user_id,
-                o.total,
-                o.created_at,
-                u.name AS user_name
-            FROM orders o
-            INNER JOIN users u ON u.id = o.user_id
-        ";
-
-        $params     = [];
-        $conditions = ["o.status = 'done'"];
-
-        if ($userId > 0) {
-            $conditions[]        = "o.user_id = :user_id";
-            $params['user_id']   = $userId;
-        }
-
-        if ($dateFrom !== '') {
-            $conditions[]        = "DATE(o.created_at) >= :date_from";
-            $params['date_from'] = $dateFrom;
-        }
-
-        if ($dateTo !== '') {
-            $conditions[]        = "DATE(o.created_at) <= :date_to";
-            $params['date_to']   = $dateTo;
-        }
-
-        if (!empty($conditions)) {
-            $sql .= " WHERE " . implode(' AND ', $conditions);
-        }
-
-        $sql .= " ORDER BY u.name ASC, o.created_at DESC";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $grouped = [];
-
-        foreach ($rows as $row) {
-            $uid = (int) $row['user_id'];
-
-            if (!isset($grouped[$uid])) {
-                $grouped[$uid] = [
-                    'user_id'    => $uid,
-                    'user_name'  => $row['user_name'],
-                    'user_total' => 0,
-                    'orders'     => [],
-                ];
-            }
-
-            $grouped[$uid]['orders'][] = [
-                'id'         => (int) $row['id'],
-                'total'      => (float) $row['total'],
-                'created_at' => $row['created_at'],
-                'items'      => [],
-            ];
-
-            $grouped[$uid]['user_total'] += (float) $row['total'];
-        }
-
-        // Collect all order IDs and fetch their items
-        $orderIds = [];
-        foreach ($grouped as $g) {
-            foreach ($g['orders'] as $o) {
-                $orderIds[] = $o['id'];
-            }
-        }
-
-        if (!empty($orderIds)) {
-            $items = $this->fetchOrderItems($orderIds);
-
-            foreach ($grouped as &$g) {
-                foreach ($g['orders'] as &$order) {
-                    $order['items'] = $items[$order['id']] ?? [];
-                }
-            }
-            unset($g, $order);
-        }
-
-        return array_values($grouped);
-    }
-
-    private function fetchOrderItems(array $orderIds): array
-    {
-        $conn = Database::getConnection();
-
-        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
-
-        $stmt = $conn->prepare("
-            SELECT oi.order_id, p.name AS product_name, p.image AS product_image, oi.quantity, oi.unit_price
-            FROM order_items oi
-            INNER JOIN products p ON p.id = oi.product_id
-            WHERE oi.order_id IN ($placeholders)
-            ORDER BY oi.id ASC
-        ");
-        $stmt->execute($orderIds);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $map = [];
-        foreach ($rows as $row) {
-            $map[(int) $row['order_id']][] = [
-                'product_name'  => $row['product_name'],
-                'product_image' => $row['product_image'],
-                'quantity'      => (int) $row['quantity'],
-                'unit_price'    => (float) $row['unit_price'],
-            ];
-        }
-
-        return $map;
     }
 }
