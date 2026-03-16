@@ -194,6 +194,18 @@ shadow-sm">
 
             </a>
 
+            <a href="<?= BASE_URL ?>/admin/checks"
+            class="px-3 py-1.5 rounded-md
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700 text-white
+            shadow <?= $current == "checks" ? 'bg-blue-600' : ' ' ?> transition">
+
+                checks
+
+            </a>
+
 
 
 
@@ -239,7 +251,7 @@ shadow-sm">
 
             Logout
 
-</a>
+        </a>
 
 
     </div>
