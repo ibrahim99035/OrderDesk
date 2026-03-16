@@ -55,6 +55,7 @@
             <?php foreach ($order['items'] as $item): ?>
             <div class="flex justify-between items-center py-3">
                 <div>
+                  
                     <p class="font-semibold text-gray-900 dark:text-white">Product #<?= $item['name'] ?></p>
                     <p class="text-sm text-gray-500">× <?= $item['quantity'] ?> @ <?= number_format($item['unit_price'], 2) ?> EGP</p>
                 </div>

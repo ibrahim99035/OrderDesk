@@ -3,6 +3,7 @@ namespace App\controllers;
 
 use App\core\View;
 use App\models\Order;
+use App\models\OrderItem;
 use App\models\Product;
 use App\models\User;
 use App\models\Room;
@@ -85,7 +86,7 @@ public function view($id)
     // $this->requireRole(['admin']);
     $orderId = $id ?? $this->getIdFromUrl();
     $existing = $this->findOrFail($orderId);
-    $itemModel = new \App\core\Model('order_items');
+    $itemModel = new OrderItem;
     $existing['items'] = $itemModel->where("order_id = $orderId")->get();
     $user = new User();
     $existing['user'] = $user->find($existing['user_id']);
@@ -519,26 +520,55 @@ public function manualOrder()
     // USER — VIEW SINGLE ORDER
     // GET /orders/my/{id}
     // ================================================================
-    public function showMyOrder($id = null)
-    {
-        $userId  = $_SESSION['user_id'] ?? null;
-        if (!$userId) {
-            header("Location: /login");
-            exit;
-        }
-        $orderId  = $id ?? $this->getIdFromUrl();
-        $existing = $this->findOrFail((int)$orderId, "/orders/my");
-        if ($existing['user_id'] != $userId) {
-            $_SESSION['error'] = "not allow to show this order";
-            header("Location: /orders/my");
-            exit;
-        }
-        $itemModel = new \App\core\Model('order_items');
-        $existing['items'] = $itemModel->where("order_id = $orderId")->get();
-        $existing['room'] = (new Room())->find($existing['room_id']);
-        View::make("user.orders.show", ["order" => $existing]);
+public function showMyOrder($id = null)
+{
+    $userId  = $_SESSION['user_id'] ?? null;
+
+    if (!$userId) {
+        header("Location: /login");
+        exit;
     }
 
+    $orderId  = $id ?? $this->getIdFromUrl();
+
+    $existing = $this->findOrFail((int)$orderId, "/orders/my");
+
+    if ($existing['user_id'] != $userId) {
+        $_SESSION['error'] = "not allow to show this order";
+        header("Location: /orders/my");
+        exit;
+    }
+
+    // items
+    $itemModel = new \App\core\Model('order_items');
+    $productModel = new \App\core\Model('products');
+
+    $items = $itemModel->where("order_id = $orderId")->get();
+
+    foreach ($items as &$item) {
+
+        if (isset($item['product_id'])) {
+
+            $product = $productModel->find($item['product_id']);
+
+            $item['name'] = $product['name'] ?? 'Unknown';
+
+        } else {
+
+            $item['name'] = 'Unknown';
+
+        }
+    }
+
+    $existing['items'] = $items;
+
+    // room
+    $existing['room'] = (new Room())->find($existing['room_id']);
+
+    View::make("user.orders.show", [
+        "order" => $existing
+    ]);
+}
     public function officeBoyIndex()
 {
     $orders = (new Order())->where("status = 'processing'")

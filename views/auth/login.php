@@ -1,81 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        syne: ['Syne', 'sans-serif'],
-                        mono: ['DM Mono', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+body{
+font-family: Inter, sans-serif;
+}
+</style>
+
 </head>
-<body class="font-mono bg-neutral-950 text-neutral-100 min-h-screen flex items-center justify-center">
 
-    <div class="w-full max-w-md px-6">
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
 
-        <div class="border border-neutral-800 bg-neutral-900 p-10 relative">
 
-            <!-- Accent top line -->
-            <div class="absolute top-0 left-0 right-0 h-0.5 bg-lime-300"></div>
+<div class="w-full max-w-md px-6">
 
-            <p class="text-lime-300 text-xs tracking-widest uppercase mb-3">Admin Panel</p>
-            <h1 class="font-syne font-extrabold text-3xl mb-8">Sign In</h1>
+<div class="bg-white rounded-3xl shadow-2xl p-10">
 
-            <?php if (!empty($error)): ?>
-                <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 mb-6 tracking-wide">
-                    <?= htmlspecialchars($error) ?>
-                </div>
-            <?php endif; ?>
 
-            <form method="POST" action="<?= BASE_URL ?>/login" class="space-y-5">
+<h2 class="text-3xl font-extrabold text-gray-800 mb-2">
+Welcome Back
+</h2>
 
-                <div class="flex flex-col gap-2">
-                    <label for="email" class="text-neutral-500 text-xs tracking-widest uppercase">Email</label>
-                    <input
-                        type="email" id="email" name="email"
-                        value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-                        placeholder="you@example.com"
-                        required autofocus
-                        class="bg-neutral-950 border border-neutral-800 text-neutral-100 font-mono text-sm px-4 py-3 outline-none focus:border-lime-300 transition-colors placeholder:text-neutral-700"
-                    >
-                </div>
+<p class="text-gray-500 mb-8">
+Sign in to continue 
+</p>
 
-                <div class="flex flex-col gap-2">
-                    <label for="password" class="text-neutral-500 text-xs tracking-widest uppercase">Password</label>
-                    <input
-                        type="password" id="password" name="password"
-                        placeholder="••••••••"
-                        required
-                        class="bg-neutral-950 border border-neutral-800 text-neutral-100 font-mono text-sm px-4 py-3 outline-none focus:border-lime-300 transition-colors placeholder:text-neutral-700"
-                    >
-                </div>
 
-                <button
-                    type="submit"
-                    class="w-full bg-lime-300 text-neutral-950 font-syne font-bold text-xs tracking-widest uppercase py-3.5 mt-2 hover:bg-lime-200 active:scale-[.99] transition-all"
-                >
-                    Enter →
-                </button>
+<?php if (!empty($error)): ?>
+<div class="bg-red-100 text-red-600 px-4 py-3 rounded-lg mb-5 text-sm">
+<?= htmlspecialchars($error) ?>
+</div>
+<?php endif; ?>
 
-            </form>
 
-            <p class="mt-8 text-xs text-neutral-600 text-center tracking-wide">
-                Restricted access — authorised personnel only
-            </p>
+<form method="POST" action="<?= BASE_URL ?>/login" class="space-y-5">
 
-        </div>
-    </div>
+
+<div>
+
+<label class="text-sm text-gray-600">
+Email
+</label>
+
+<input
+type="email"
+name="email"
+value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+required
+class="w-full mt-1 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none"
+/>
+
+</div>
+
+
+
+<div>
+
+<label class="text-sm text-gray-600">
+Password
+</label>
+
+<input
+type="password"
+name="password"
+required
+class="w-full mt-1 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none"
+/>
+
+</div>
+
+
+
+<button
+class="w-full py-3 rounded-xl text-white font-semibold
+bg-gradient-to-r from-indigo-500 to-purple-600
+hover:from-indigo-600 hover:to-purple-700
+transition shadow-lg"
+>
+Sign In
+</button>
+
+
+</form>
+
+
+<div class="text-center mt-6 text-sm text-gray-500">
+Secure Admin Login
+</div>
+
+
+</div>
+
+</div>
 
 </body>
 </html>
