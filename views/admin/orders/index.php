@@ -172,11 +172,25 @@
             <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
         </div>
         <form id="editForm" method="POST" class="p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Room ID</label>
-                <input type="number" name="room_id" id="edit_room_id" required
-                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-            </div>
+       <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Room ID
+            </label>
+
+            <select name="room_id" id="edit_room_id" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+
+                <option value="">Select Room</option>
+                                    <?php var_dump($rooms) ?>
+                <?php foreach ($rooms as $room): ?>
+
+                    <option value="<?= $room['id'] ?>">
+                        <?= $room['room_number'] ?>
+                    </option>
+                <?php endforeach; ?>
+
+            </select>
+        </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                 <textarea name="notes" id="edit_notes" rows="3"

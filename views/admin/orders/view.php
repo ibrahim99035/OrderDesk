@@ -53,12 +53,7 @@ include "views/admin/layout/header.php";
                         <?= htmlspecialchars($order['user']['email'] ?? '—') ?>
                     </span>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-500">Placed by</span>
-                    <span class="font-semibold text-gray-900 dark:text-white">
-                        <?= $order['placed_by'] == $order['user_id'] ? 'Self' : "Admin #{$order['placed_by']}" ?>
-                    </span>
-                </div>
+
             </div>
         </div>
 

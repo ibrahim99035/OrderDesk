@@ -153,7 +153,18 @@ shadow-sm">
 
             </a>
 
+    <a href="/orders"
+            class="px-2 py-1 rounded-md
+            text-gray-700 dark:text-gray-300
+            hover:text-blue-600
+            dark:hover:text-blue-400
+            hover:bg-gray-100
+            dark:hover:bg-gray-700
+            transition">
 
+                orders
+
+            </a>
        
 
 

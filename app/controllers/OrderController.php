@@ -62,7 +62,8 @@ public function index()
 {
     // $this->requireRole(['admin']);
     $orders = (new Order())->all();
-    View::make("admin.orders.index", ["orders" => $orders]);
+    $room = new Room ;
+    View::make("admin.orders.index", ["orders" => $orders , "rooms"    => $room->all(),]);
 }
 // ================================================================
     // ADMIN — VIEW SINGLE ORDER
@@ -73,7 +74,7 @@ public function view($id)
     // $this->requireRole(['admin']);
     $orderId = $id ?? $this->getIdFromUrl();
     $existing = $this->findOrFail($orderId);
-    $$itemModel = new \App\core\Model('order_items');
+    $itemModel = new \App\core\Model('order_items');
     $existing['items'] = $itemModel->where("order_id = $orderId")->get();
     $user = new User();
     $existing['user'] = $user->find($existing['user_id']);
@@ -410,10 +411,12 @@ public function manualOrder()
     // $this->requireRole(['admin', 'office_boy']);
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        $room = new Room ;
+        var_dump($room->all()) ;
         View::make("admin.orders.manual_order", [
             "products" => (new Product())->where("is_available = 1")->get(),
             "users"    => (new User())->where("is_active = 1")->get(),
-            "rooms"    => (new Room())->all(),
+            "rooms"    => $room->all(),
         ]);
         return;
     }
@@ -422,9 +425,9 @@ public function manualOrder()
     $roomId   = $_POST['room_id'] ?? null;
     $notes    = $_POST['notes'] ?? '';
     $items    = $_POST['items'] ?? [];
-    $placedBy = $_SESSION['user_id'] ?? null;
+ 
 
-    if (!$userId || !$roomId || !$placedBy || empty($items)) {
+    if (!$userId || !$roomId  || empty($items)) {
     $_SESSION['error'] = "Session expired, please login again";
     header("Location: /login");
     exit;
@@ -461,8 +464,8 @@ public function manualOrder()
     }
 
     $orderId = (new Order())->insert(
-        ['user_id', 'placed_by', 'room_id', 'notes', 'status', 'total', 'created_at'],
-        [$userId, $placedBy, $roomId, $notes, 'out_for_delivery', $total, date('Y-m-d H:i:s')]
+        ['user_id',  'room_id', 'notes', 'status', 'total', 'created_at'],
+        [$userId, $roomId, $notes, 'out_for_delivery', $total, date('Y-m-d H:i:s')]
     );
 
     if (!$orderId) {
