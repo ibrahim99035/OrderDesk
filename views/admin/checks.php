@@ -25,6 +25,20 @@
                     </select>
                 </div>
 
+                <div class="min-w-[160px]">
+                    <label for="date_from" class="block text-sm font-medium mb-2">From</label>
+                    <input type="date" name="date_from" id="date_from"
+                           value="<?= htmlspecialchars($dateFrom) ?>"
+                           class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3">
+                </div>
+
+                <div class="min-w-[160px]">
+                    <label for="date_to" class="block text-sm font-medium mb-2">To</label>
+                    <input type="date" name="date_to" id="date_to"
+                           value="<?= htmlspecialchars($dateTo) ?>"
+                           class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3">
+                </div>
+
                 <div class="flex gap-3">
                     <button type="submit" class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-semibold transition-colors">
                         Filter

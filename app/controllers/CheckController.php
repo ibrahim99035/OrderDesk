@@ -16,15 +16,19 @@ class CheckController extends Controller
 
     public function index(): void
     {
-        $userId  = (int) $this->get('user_id', 0);
-        $users   = $this->fetchUsers();
-        $results = $this->fetchChecks($userId);
+        $userId   = (int) $this->get('user_id', 0);
+        $dateFrom = $this->get('date_from', '');
+        $dateTo   = $this->get('date_to', '');
+        $users    = $this->fetchUsers();
+        $results  = $this->fetchChecks($userId, $dateFrom, $dateTo);
 
         $this->render('admin/checks', [
-            'current' => 'checks',
-            'users'   => $users,
-            'userId'  => $userId,
-            'results' => $results,
+            'current'  => 'checks',
+            'users'    => $users,
+            'userId'   => $userId,
+            'dateFrom' => $dateFrom,
+            'dateTo'   => $dateTo,
+            'results'  => $results,
         ]);
     }
 
@@ -43,7 +47,7 @@ class CheckController extends Controller
     }
 
  
-    private function fetchChecks(int $userId = 0): array
+    private function fetchChecks(int $userId = 0, string $dateFrom = '', string $dateTo = ''): array
     {
         $conn = Database::getConnection();
 
@@ -58,11 +62,26 @@ class CheckController extends Controller
             INNER JOIN users u ON u.id = o.user_id
         ";
 
-        $params = [];
+        $params     = [];
+        $conditions = [];
 
         if ($userId > 0) {
-            $sql .= " WHERE o.user_id = :user_id";
-            $params['user_id'] = $userId;
+            $conditions[]        = "o.user_id = :user_id";
+            $params['user_id']   = $userId;
+        }
+
+        if ($dateFrom !== '') {
+            $conditions[]        = "DATE(o.created_at) >= :date_from";
+            $params['date_from'] = $dateFrom;
+        }
+
+        if ($dateTo !== '') {
+            $conditions[]        = "DATE(o.created_at) <= :date_to";
+            $params['date_to']   = $dateTo;
+        }
+
+        if (!empty($conditions)) {
+            $sql .= " WHERE " . implode(' AND ', $conditions);
         }
 
         $sql .= " ORDER BY u.name ASC, o.created_at DESC";
