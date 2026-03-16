@@ -13,6 +13,7 @@ class OrderRepository
         $stmt = $conn->prepare(
             "SELECT id, name
              FROM users
+             WHERE role = 'user'
              ORDER BY name ASC"
         );
         $stmt->execute();
