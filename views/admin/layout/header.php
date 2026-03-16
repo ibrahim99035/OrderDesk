@@ -140,7 +140,7 @@ shadow-sm">
         <div class="hidden md:flex items-center gap-6 text-sm font-medium">
 
 
-            <a href="dashboard.html"
+            <a href="/admin/home"
             class="px-2 py-1 rounded-md
             text-gray-700 dark:text-gray-300
             hover:text-blue-600
@@ -237,8 +237,8 @@ shadow-sm">
 
 
         <!-- LOGOUT -->
-        <button
-        onclick="logout()"
+        <a
+        href="/logout"
         class="px-4 py-2
         rounded-lg
         bg-red-600
@@ -251,7 +251,7 @@ shadow-sm">
 
             Logout
 
-        </button>
+</a>
 
 
     </div>

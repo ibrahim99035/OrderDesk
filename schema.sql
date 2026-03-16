@@ -40,7 +40,6 @@ CREATE TABLE products (
 CREATE TABLE orders (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id     INT UNSIGNED    NOT NULL,
-    placed_by   INT UNSIGNED    NOT NULL,
     room_id     INT UNSIGNED    NOT NULL,
     notes       TEXT,
     status      ENUM('processing','out_for_delivery','done','cancelled')
@@ -50,7 +49,7 @@ CREATE TABLE orders (
     updated_at  DATETIME        ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id)   REFERENCES users(id),
-    FOREIGN KEY (placed_by) REFERENCES users(id),
+
     FOREIGN KEY (room_id)   REFERENCES rooms(id)
 );
 
