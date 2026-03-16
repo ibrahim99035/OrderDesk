@@ -1,7 +1,6 @@
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
     <div class="max-w-5xl mx-auto px-6 py-10">
 
-        <!-- Page Header -->
         <div class="mb-8">
             <p class="text-sm text-blue-600 dark:text-blue-400 font-semibold">Admin / Checks</p>
             <h1 class="text-3xl font-bold mt-2">Employee Checks</h1>
@@ -10,12 +9,11 @@
             </p>
         </div>
 
-        <!-- Filter Form -->
         <form method="GET" action="<?= BASE_URL ?>/admin/checks" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm mb-8">
             <div class="flex flex-wrap items-end gap-4">
                 <div class="flex-1 min-w-[200px]">
                     <label for="user_id" class="block text-sm font-medium mb-2">Employee</label>
-                    <select name="user_id" id="user_id" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3">
+                    <select name="user_id" id="user_id" onchange="this.form.submit()" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3">
                         <option value="0">All employees</option>
                         <?php foreach ($users as $user): ?>
                             <option value="<?= (int) $user['id'] ?>" <?= $userId === (int) $user['id'] ? 'selected' : '' ?>>
@@ -28,6 +26,7 @@
                 <div class="min-w-[160px]">
                     <label for="date_from" class="block text-sm font-medium mb-2">From</label>
                     <input type="date" name="date_from" id="date_from"
+                           onchange="this.form.submit()"
                            value="<?= htmlspecialchars($dateFrom) ?>"
                            class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3">
                 </div>
@@ -35,6 +34,7 @@
                 <div class="min-w-[160px]">
                     <label for="date_to" class="block text-sm font-medium mb-2">To</label>
                     <input type="date" name="date_to" id="date_to"
+                           onchange="this.form.submit()"
                            value="<?= htmlspecialchars($dateTo) ?>"
                            class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3">
                 </div>

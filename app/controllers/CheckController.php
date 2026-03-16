@@ -3,9 +3,7 @@
 namespace App\controllers;
 
 use App\core\Controller;
-use App\core\Database;
 use App\repositories\OrderRepository;
-use PDO;
 
 class CheckController extends Controller
 {
@@ -21,9 +19,9 @@ class CheckController extends Controller
     public function index(): void
     {
         $userId   = (int) $this->get('user_id', 0);
-        $dateFrom = $this->get('date_from', '');
-        $dateTo   = $this->get('date_to', '');
-        $users    = $this->fetchUsers();
+        $dateFrom = $this->normalizeDate($this->get('date_from', ''));
+        $dateTo   = $this->normalizeDate($this->get('date_to', ''));
+        $users    = $this->orderRepo->getAllUsers();
         $results  = $this->orderRepo->checksData($dateFrom, $dateTo, $userId);
 
         $this->render('admin/checks', [
@@ -36,16 +34,18 @@ class CheckController extends Controller
         ]);
     }
 
-    private function fetchUsers(): array
+    private function normalizeDate(string $date): string
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare(
-            "SELECT id, name
-             FROM users
-             ORDER BY name ASC"
-        );
-        $stmt->execute();
+        if ($date === '') {
+            return '';
+        }
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $timestamp = strtotime($date);
+
+        if ($timestamp === false) {
+            return '';
+        }
+
+        return date('Y-m-d', $timestamp);
     }
 }

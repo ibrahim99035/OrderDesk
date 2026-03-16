@@ -7,6 +7,19 @@ use PDO;
 
 class OrderRepository
 {
+    public function getAllUsers(): array
+    {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare(
+            "SELECT id, name
+             FROM users
+             ORDER BY name ASC"
+        );
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function checksData(string $dateFrom = '', string $dateTo = '', int $userId = 0): array
     {
         $conn = Database::getConnection();
@@ -72,7 +85,6 @@ class OrderRepository
             $grouped[$uid]['user_total'] += (float) $row['total'];
         }
 
-        // Batch-fetch order items
         $orderIds = [];
         foreach ($grouped as $g) {
             foreach ($g['orders'] as $o) {
@@ -94,10 +106,8 @@ class OrderRepository
         return array_values($grouped);
     }
 
-    /**
-     * Fetch items for a batch of order IDs.
-     */
-    private function fetchOrderItems(mixed $conn, array $orderIds): array
+   
+    private function fetchOrderItems(PDO $conn, array $orderIds): array
     {
         $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
 
