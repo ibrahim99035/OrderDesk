@@ -11,7 +11,7 @@ $rooms       = $rooms       ?? [];
     <div class="mb-10">
         <p class="text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400 mb-1">User / Home</p>
         <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-            👋 Welcome back, <?= htmlspecialchars(\App\core\Session::get('user_name')) ?>
+            👋 Welcome back, <?= htmlspecialchars(\App\core\Session::get('name')) ?? '' ?>
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Here's what's available today</p>
     </div>

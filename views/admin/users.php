@@ -1,106 +1,105 @@
-<?php include "layout/header.php" ; ?>
+<?php include "layout/header.php"; ?>
 
-<div class="min-h-screen bg-neutral-950 text-neutral-100 font-mono">
-<div class="max-w-6xl mx-auto px-6 py-12">
+<div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+<div class="max-w-6xl mx-auto">
 
     <!-- Page Header -->
-    <div class="flex items-end justify-between mb-10 flex-wrap gap-4">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-10">
         <div>
-            <p class="text-lime-300 text-xs tracking-widest uppercase mb-2">Admin / Users</p>
-            <h1 class="font-syne font-extrabold text-4xl">
-                Users <span class="text-neutral-600">(<?= count($users) ?>)</span>
-            </h1>
+            <p class="text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400 mb-1">Admin / Users</p>
+            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                Users <span class="text-gray-400 dark:text-gray-500 font-normal text-2xl">(<?= count($users) ?>)</span>
+            </h2>
         </div>
         <button
             onclick="openModal('createModal')"
-            class="bg-lime-300 text-neutral-950 font-syne font-bold text-xs tracking-widest uppercase px-5 py-3 hover:bg-lime-200 active:scale-[.99] transition-all"
+            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow transition-all active:scale-[.99]"
         >
             + New User
         </button>
     </div>
 
     <!-- Table -->
-    <div class="border border-neutral-800 overflow-x-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-x-auto">
         <table class="w-full text-sm border-collapse">
-            <thead class="bg-neutral-900 border-b border-neutral-800">
-                <tr>
-                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">User</th>
-                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Email</th>
-                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Room</th>
-                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Ext.</th>
-                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Role</th>
-                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Status</th>
-                    <th class="px-4 py-4 text-left text-xs text-neutral-500 tracking-widest uppercase">Joined</th>
-                    <th class="px-4 py-4 text-right text-xs text-neutral-500 tracking-widest uppercase">Actions</th>
+            <thead>
+                <tr class="border-b border-gray-100 dark:border-gray-700">
+                    <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">User</th>
+                    <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Email</th>
+                    <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Room</th>
+                    <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Ext.</th>
+                    <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Role</th>
+                    <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Status</th>
+                    <th class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Joined</th>
+                    <th class="px-5 py-4 text-right text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-neutral-800/60">
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
                 <?php if (empty($users)): ?>
                     <tr>
-                        <td colspan="8" class="px-4 py-10 text-center text-neutral-600 text-xs tracking-wide">
+                        <td colspan="8" class="px-5 py-12 text-center text-gray-400 dark:text-gray-600 text-sm">
                             No users found.
                         </td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($users as $user): ?>
-                    <tr class="hover:bg-neutral-900/50 transition-colors">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
 
-                        <!-- Avatar + Name -->
-                        <td class="px-4 py-3">
+                        <td class="px-5 py-4">
                             <div class="flex items-center gap-3">
                                 <?php if (!empty($user['image'])): ?>
                                     <img src="/public/uploads/users/<?= htmlspecialchars($user['image']) ?>"
-                                         class="w-8 h-8 rounded-full object-cover border border-neutral-700" alt="">
+                                         class="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-gray-600" alt="">
                                 <?php else: ?>
-                                    <div class="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-xs text-neutral-500 font-syne font-bold">
+                                    <div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-xs text-blue-600 dark:text-blue-400 font-bold">
                                         <?= strtoupper(substr($user['name'], 0, 1)) ?>
                                     </div>
                                 <?php endif; ?>
-                                <span class="font-medium text-neutral-100"><?= htmlspecialchars($user['name']) ?></span>
+                                <span class="font-semibold text-gray-900 dark:text-white"><?= htmlspecialchars($user['name']) ?></span>
                             </div>
                         </td>
 
-                        <td class="px-4 py-3 text-neutral-400"><?= htmlspecialchars($user['email']) ?></td>
+                        <td class="px-5 py-4 text-gray-500 dark:text-gray-400"><?= htmlspecialchars($user['email']) ?></td>
 
-                        <td class="px-4 py-3 text-neutral-400">
-                            <?= !empty($user['room_number']) ? htmlspecialchars($user['room_number']) : '<span class="text-neutral-700">—</span>' ?>
+                        <td class="px-5 py-4 text-gray-500 dark:text-gray-400">
+                            <?= !empty($user['room_number']) ? htmlspecialchars($user['room_number']) : '<span class="text-gray-300 dark:text-gray-600">—</span>' ?>
                         </td>
 
-                        <td class="px-4 py-3 text-neutral-400">
-                            <?= !empty($user['extension']) ? htmlspecialchars($user['extension']) : '<span class="text-neutral-700">—</span>' ?>
+                        <td class="px-5 py-4 text-gray-500 dark:text-gray-400">
+                            <?= !empty($user['extension']) ? htmlspecialchars($user['extension']) : '<span class="text-gray-300 dark:text-gray-600">—</span>' ?>
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td class="px-5 py-4">
                             <?php if ($user['role'] === 'admin'): ?>
-                                <span class="bg-lime-300/10 text-lime-300 border border-lime-300/20 text-xs px-2 py-1 tracking-widest uppercase">Admin</span>
+                                <span class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wide">Admin</span>
                             <?php else: ?>
-                                <span class="bg-neutral-800 text-neutral-400 text-xs px-2 py-1 tracking-widest uppercase">User</span>
+                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wide">User</span>
                             <?php endif; ?>
                         </td>
 
-                        <td class="px-4 py-3">
+                        <td class="px-5 py-4">
                             <?php if ($user['is_active']): ?>
-                                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-2 py-1 tracking-widest uppercase">Active</span>
+                                <span class="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wide">Active</span>
                             <?php else: ?>
-                                <span class="bg-red-500/10 text-red-400 border border-red-500/20 text-xs px-2 py-1 tracking-widest uppercase">Inactive</span>
+                                <span class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wide">Inactive</span>
                             <?php endif; ?>
                         </td>
 
-                        <td class="px-4 py-3 text-neutral-500 text-xs">
+                        <td class="px-5 py-4 text-gray-400 dark:text-gray-500 text-xs">
                             <?= date('d M Y', strtotime($user['created_at'])) ?>
                         </td>
 
-                        <td class="px-4 py-3 text-right">
+                        <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end gap-2">
                                 <button
                                     onclick='openEditModal(<?= json_encode($user) ?>)'
-                                    class="border border-neutral-700 text-neutral-300 font-syne font-bold text-xs tracking-widest uppercase px-3 py-2 hover:border-neutral-400 hover:text-white transition-all"
+                                    class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
                                 >Edit</button>
 
                                 <?php if ((int)$user['id'] !== (int)\App\core\Session::get('user_id')): ?>
                                 <button
                                     onclick='openDeleteModal(<?= $user["id"] ?>, <?= json_encode($user["name"]) ?>)'
-                                    class="border border-red-500/30 text-red-400 font-syne font-bold text-xs tracking-widest uppercase px-3 py-2 hover:bg-red-500/10 transition-all"
+                                    class="bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
                                 >Delete</button>
                                 <?php endif; ?>
                             </div>
@@ -116,11 +115,7 @@
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════
-     SHARED FIELD MACRO (PHP helper to avoid duplication)
-════════════════════════════════════════════════════════ -->
 <?php
-// Builds a reusable rooms <select> to avoid repeating the PHP loop twice
 function roomOptions(array $rooms, $selectedId = null): string {
     $html = '<option value="">— No Room —</option>';
     foreach ($rooms as $r) {
@@ -130,41 +125,37 @@ function roomOptions(array $rooms, $selectedId = null): string {
     return $html;
 }
 
-$inputCls  = "bg-neutral-950 border border-neutral-800 text-neutral-100 font-mono text-sm px-4 py-3 outline-none focus:border-lime-300 transition-colors placeholder:text-neutral-700 w-full";
-$labelCls  = "text-neutral-500 text-xs tracking-widest uppercase mb-2 block";
-$fieldCls  = "flex flex-col";
+$inputCls = "w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm px-4 py-3 rounded-xl outline-none focus:border-blue-500 transition-colors placeholder:text-gray-400";
+$labelCls = "block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1";
+$fieldCls = "flex flex-col";
 ?>
 
 
-<!-- ═══════════════════════════════════════════
-     CREATE MODAL
-════════════════════════════════════════════ -->
+<!-- CREATE MODAL -->
 <div id="createModal" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal('createModal')"></div>
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('createModal')"></div>
 
-    <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-neutral-900 border-l border-neutral-800 flex flex-col translate-x-full transition-transform duration-300" id="createPanel">
-        <div class="h-0.5 bg-lime-300"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col translate-x-full transition-transform duration-300" id="createPanel">
 
-        <div class="flex items-center justify-between px-8 py-5 border-b border-neutral-800">
+        <div class="flex items-center justify-between px-8 py-5 border-b border-gray-100 dark:border-gray-700">
             <div>
-                <p class="text-lime-300 text-xs tracking-widest uppercase mb-1">Users</p>
-                <h2 class="font-syne font-bold text-xl">New User</h2>
+                <p class="text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400 mb-1">Users</p>
+                <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">New User</h2>
             </div>
-            <button onclick="closeModal('createModal')" class="text-neutral-500 hover:text-white text-xl transition-colors">✕</button>
+            <button onclick="closeModal('createModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-white text-xl transition-colors">✕</button>
         </div>
 
         <form method="POST" action="<?= BASE_URL ?>/admin/users/store" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-y-auto">
             <div class="px-8 py-6 space-y-5 flex-1">
 
                 <?php if (!empty($createErrors)): ?>
-                    <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 tracking-wide space-y-1">
+                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs px-4 py-3 rounded-xl space-y-1">
                         <?php foreach ($createErrors as $e): ?>
                             <div>— <?= htmlspecialchars($e) ?></div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- Name -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Name <span class="text-red-400">*</span></label>
                     <input type="text" name="name" placeholder="Full name"
@@ -172,7 +163,6 @@ $fieldCls  = "flex flex-col";
                            class="<?= $inputCls ?>">
                 </div>
 
-                <!-- Email -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Email <span class="text-red-400">*</span></label>
                     <input type="email" name="email" placeholder="user@example.com"
@@ -180,14 +170,12 @@ $fieldCls  = "flex flex-col";
                            class="<?= $inputCls ?>">
                 </div>
 
-                <!-- Password -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Password <span class="text-red-400">*</span></label>
                     <input type="password" name="password" placeholder="Min. 8 characters"
                            class="<?= $inputCls ?>">
                 </div>
 
-                <!-- Role + Room (2 cols) -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="<?= $fieldCls ?>">
                         <label class="<?= $labelCls ?>">Role</label>
@@ -204,7 +192,6 @@ $fieldCls  = "flex flex-col";
                     </div>
                 </div>
 
-                <!-- Extension -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Extension</label>
                     <input type="text" name="extension" placeholder="e.g. 101"
@@ -212,31 +199,29 @@ $fieldCls  = "flex flex-col";
                            class="<?= $inputCls ?>">
                 </div>
 
-                <!-- Image -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Profile Image</label>
                     <input type="file" name="image" accept="image/jpeg,image/png,image/webp"
-                           class="text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-neutral-800 file:text-neutral-300 file:text-xs file:font-syne file:uppercase file:tracking-widest hover:file:bg-neutral-700 cursor-pointer">
-                    <p class="text-neutral-600 text-xs mt-1">JPEG, PNG or WebP — max 2 MB</p>
+                           class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-600 dark:file:text-blue-400 file:text-xs file:font-semibold hover:file:bg-blue-100 cursor-pointer">
+                    <p class="text-gray-400 text-xs mt-1">JPEG, PNG or WebP — max 2 MB</p>
                 </div>
 
-                <!-- is_active -->
                 <div class="flex items-center gap-3 pt-1">
                     <input type="checkbox" name="is_active" id="create_is_active" value="1"
                            <?= !isset($createOld) || !empty($createOld['is_active']) ? 'checked' : '' ?>
-                           class="w-4 h-4 accent-lime-300 cursor-pointer">
-                    <label for="create_is_active" class="text-neutral-400 text-sm cursor-pointer">Active account</label>
+                           class="w-4 h-4 accent-blue-600 cursor-pointer">
+                    <label for="create_is_active" class="text-gray-600 dark:text-gray-400 text-sm cursor-pointer">Active account</label>
                 </div>
 
             </div>
 
-            <div class="px-8 py-5 border-t border-neutral-800 flex gap-3">
+            <div class="px-8 py-5 border-t border-gray-100 dark:border-gray-700 flex gap-3">
                 <button type="submit"
-                    class="flex-1 bg-lime-300 text-neutral-950 font-syne font-bold text-xs tracking-widest uppercase py-3 hover:bg-lime-200 active:scale-[.99] transition-all">
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-3 rounded-xl shadow transition-all active:scale-[.99]">
                     Create User
                 </button>
                 <button type="button" onclick="closeModal('createModal')"
-                    class="px-5 border border-neutral-700 text-neutral-400 font-syne font-bold text-xs tracking-widest uppercase hover:border-neutral-500 transition-all">
+                    class="px-5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl transition-all">
                     Cancel
                 </button>
             </div>
@@ -245,28 +230,25 @@ $fieldCls  = "flex flex-col";
 </div>
 
 
-<!-- ═══════════════════════════════════════════
-     EDIT MODAL
-════════════════════════════════════════════ -->
+<!-- EDIT MODAL -->
 <div id="editModal" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal('editModal')"></div>
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('editModal')"></div>
 
-    <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-neutral-900 border-l border-neutral-800 flex flex-col translate-x-full transition-transform duration-300" id="editPanel">
-        <div class="h-0.5 bg-lime-300"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col translate-x-full transition-transform duration-300" id="editPanel">
 
-        <div class="flex items-center justify-between px-8 py-5 border-b border-neutral-800">
+        <div class="flex items-center justify-between px-8 py-5 border-b border-gray-100 dark:border-gray-700">
             <div>
-                <p class="text-lime-300 text-xs tracking-widest uppercase mb-1">Users</p>
-                <h2 class="font-syne font-bold text-xl">Edit User</h2>
+                <p class="text-xs font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400 mb-1">Users</p>
+                <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">Edit User</h2>
             </div>
-            <button onclick="closeModal('editModal')" class="text-neutral-500 hover:text-white text-xl transition-colors">✕</button>
+            <button onclick="closeModal('editModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-white text-xl transition-colors">✕</button>
         </div>
 
         <form method="POST" action="<?= BASE_URL ?>/admin/users/update" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-y-auto">
             <div class="px-8 py-6 space-y-5 flex-1">
 
                 <?php if (!empty($editErrors)): ?>
-                    <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 tracking-wide space-y-1">
+                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs px-4 py-3 rounded-xl space-y-1">
                         <?php foreach ($editErrors as $e): ?>
                             <div>— <?= htmlspecialchars($e) ?></div>
                         <?php endforeach; ?>
@@ -275,13 +257,11 @@ $fieldCls  = "flex flex-col";
 
                 <input type="hidden" name="id" id="edit_id">
 
-                <!-- Current avatar preview -->
                 <div id="edit_avatar_wrap" class="hidden items-center gap-3">
-                    <img id="edit_avatar" src="" class="w-10 h-10 rounded-full object-cover border border-neutral-700" alt="">
-                    <span class="text-neutral-500 text-xs">Current photo</span>
+                    <img id="edit_avatar" src="" class="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600" alt="">
+                    <span class="text-gray-400 text-xs">Current photo</span>
                 </div>
 
-                <!-- Name -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Name <span class="text-red-400">*</span></label>
                     <input type="text" name="name" id="edit_name"
@@ -289,7 +269,6 @@ $fieldCls  = "flex flex-col";
                            class="<?= $inputCls ?>">
                 </div>
 
-                <!-- Email -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Email <span class="text-red-400">*</span></label>
                     <input type="email" name="email" id="edit_email"
@@ -297,7 +276,6 @@ $fieldCls  = "flex flex-col";
                            class="<?= $inputCls ?>">
                 </div>
 
-                <!-- Password -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">New Password</label>
                     <input type="password" name="password"
@@ -305,7 +283,6 @@ $fieldCls  = "flex flex-col";
                            class="<?= $inputCls ?>">
                 </div>
 
-                <!-- Role + Room -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="<?= $fieldCls ?>">
                         <label class="<?= $labelCls ?>">Role</label>
@@ -322,7 +299,6 @@ $fieldCls  = "flex flex-col";
                     </div>
                 </div>
 
-                <!-- Extension -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Extension</label>
                     <input type="text" name="extension" id="edit_extension"
@@ -331,30 +307,28 @@ $fieldCls  = "flex flex-col";
                            class="<?= $inputCls ?>">
                 </div>
 
-                <!-- Image -->
                 <div class="<?= $fieldCls ?>">
                     <label class="<?= $labelCls ?>">Replace Profile Image</label>
                     <input type="file" name="image" accept="image/jpeg,image/png,image/webp"
-                           class="text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-neutral-800 file:text-neutral-300 file:text-xs file:font-syne file:uppercase file:tracking-widest hover:file:bg-neutral-700 cursor-pointer">
-                    <p class="text-neutral-600 text-xs mt-1">Leave empty to keep current image</p>
+                           class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-600 dark:file:text-blue-400 file:text-xs file:font-semibold hover:file:bg-blue-100 cursor-pointer">
+                    <p class="text-gray-400 text-xs mt-1">Leave empty to keep current image</p>
                 </div>
 
-                <!-- is_active -->
                 <div class="flex items-center gap-3 pt-1">
                     <input type="checkbox" name="is_active" id="edit_is_active" value="1"
-                           class="w-4 h-4 accent-lime-300 cursor-pointer">
-                    <label for="edit_is_active" class="text-neutral-400 text-sm cursor-pointer">Active account</label>
+                           class="w-4 h-4 accent-blue-600 cursor-pointer">
+                    <label for="edit_is_active" class="text-gray-600 dark:text-gray-400 text-sm cursor-pointer">Active account</label>
                 </div>
 
             </div>
 
-            <div class="px-8 py-5 border-t border-neutral-800 flex gap-3">
+            <div class="px-8 py-5 border-t border-gray-100 dark:border-gray-700 flex gap-3">
                 <button type="submit"
-                    class="flex-1 bg-lime-300 text-neutral-950 font-syne font-bold text-xs tracking-widest uppercase py-3 hover:bg-lime-200 active:scale-[.99] transition-all">
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-3 rounded-xl shadow transition-all active:scale-[.99]">
                     Save Changes
                 </button>
                 <button type="button" onclick="closeModal('editModal')"
-                    class="px-5 border border-neutral-700 text-neutral-400 font-syne font-bold text-xs tracking-widest uppercase hover:border-neutral-500 transition-all">
+                    class="px-5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl transition-all">
                     Cancel
                 </button>
             </div>
@@ -363,30 +337,27 @@ $fieldCls  = "flex flex-col";
 </div>
 
 
-<!-- ═══════════════════════════════════════════
-     DELETE MODAL
-════════════════════════════════════════════ -->
+<!-- DELETE MODAL -->
 <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center">
-    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal('deleteModal')"></div>
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal('deleteModal')"></div>
 
-    <div class="relative z-10 bg-neutral-900 border border-neutral-800 w-full max-w-sm mx-4 p-8 scale-95 opacity-0 transition-all duration-200" id="deletePanel">
-        <div class="absolute top-0 left-0 right-0 h-0.5 bg-red-500"></div>
+    <div class="relative z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-sm mx-4 p-8 scale-95 opacity-0 transition-all duration-200 shadow-xl" id="deletePanel">
 
-        <p class="text-red-400 text-xs tracking-widest uppercase mb-2">Danger Zone</p>
-        <h2 class="font-syne font-bold text-xl mb-3">Delete User</h2>
-        <p class="text-neutral-400 text-sm mb-6">
-            You are about to delete <span id="delete_name" class="text-white font-medium"></span>.
-            This action <span class="text-red-400">cannot be undone</span>.
+        <p class="text-xs font-semibold uppercase tracking-widest text-red-500 mb-2">Danger Zone</p>
+        <h2 class="text-xl font-extrabold text-gray-900 dark:text-white mb-3">Delete User</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            You are about to delete <span id="delete_name" class="text-gray-900 dark:text-white font-semibold"></span>.
+            This action <span class="text-red-500">cannot be undone</span>.
         </p>
 
         <form method="POST" action="<?= BASE_URL ?>/admin/users/delete" class="flex gap-3">
             <input type="hidden" name="id" id="delete_id">
             <button type="submit"
-                class="flex-1 bg-red-500 text-white font-syne font-bold text-xs tracking-widest uppercase py-3 hover:bg-red-400 active:scale-[.99] transition-all">
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-3 rounded-xl shadow transition-all active:scale-[.99]">
                 Yes, Delete
             </button>
             <button type="button" onclick="closeModal('deleteModal')"
-                class="px-5 border border-neutral-700 text-neutral-400 font-syne font-bold text-xs tracking-widest uppercase hover:border-neutral-500 transition-all">
+                class="px-5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl transition-all">
                 Cancel
             </button>
         </form>
@@ -399,7 +370,6 @@ $fieldCls  = "flex flex-col";
         const modal = document.getElementById(id);
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-
         const panel = document.getElementById(id.replace('Modal', 'Panel'));
         if (panel?.classList.contains('translate-x-full')) {
             requestAnimationFrame(() => panel.classList.remove('translate-x-full'));
@@ -416,7 +386,6 @@ $fieldCls  = "flex flex-col";
     function closeModal(id) {
         const modal = document.getElementById(id);
         const panel = document.getElementById(id.replace('Modal', 'Panel'));
-
         if (panel?.classList.contains('transition-transform')) {
             panel.classList.add('translate-x-full');
             setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
@@ -434,14 +403,9 @@ $fieldCls  = "flex flex-col";
         document.getElementById('edit_email').value     = user.email;
         document.getElementById('edit_extension').value = user.extension ?? '';
         document.getElementById('edit_is_active').checked = user.is_active == 1;
+        document.getElementById('edit_role').value     = user.role ?? 'user';
+        document.getElementById('edit_room_id').value  = user.room_id ?? '';
 
-        const roleSelect = document.getElementById('edit_role');
-        roleSelect.value = user.role ?? 'user';
-
-        const roomSelect = document.getElementById('edit_room_id');
-        roomSelect.value = user.room_id ?? '';
-
-        // Show avatar preview if user has an image
         const avatarWrap = document.getElementById('edit_avatar_wrap');
         const avatarImg  = document.getElementById('edit_avatar');
         if (user.image) {
@@ -452,7 +416,6 @@ $fieldCls  = "flex flex-col";
             avatarWrap.classList.add('hidden');
             avatarWrap.classList.remove('flex');
         }
-
         openModal('editModal');
     }
 
@@ -479,6 +442,4 @@ $fieldCls  = "flex flex-col";
     <?php endif; ?>
 </script>
 
-<?php
-include "layout/footer.php" ;
-?>
+<?php include "layout/footer.php"; ?>
