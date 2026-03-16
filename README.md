@@ -34,6 +34,11 @@ php -S localhost:8080 index.php
 
 The database deployed and allowes 100 requst per hour
 
+### Admin Account
+| Email           | Password   |
+| --------------- | ---------- |
+| admin@admin.com | Admin@1234 |
+
 ## Core Architecture
 - **Custom MVC Framework:** Built from scratch for learning and flexibility.
 - **PSR-4 Autoloading:** Modern PHP standards for class loading via Composer.
