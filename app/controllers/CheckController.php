@@ -108,11 +108,59 @@ class CheckController extends Controller
                 'id'         => (int) $row['id'],
                 'total'      => (float) $row['total'],
                 'created_at' => $row['created_at'],
+                'items'      => [],
             ];
 
             $grouped[$uid]['user_total'] += (float) $row['total'];
         }
 
+        // Collect all order IDs and fetch their items
+        $orderIds = [];
+        foreach ($grouped as $g) {
+            foreach ($g['orders'] as $o) {
+                $orderIds[] = $o['id'];
+            }
+        }
+
+        if (!empty($orderIds)) {
+            $items = $this->fetchOrderItems($orderIds);
+
+            foreach ($grouped as &$g) {
+                foreach ($g['orders'] as &$order) {
+                    $order['items'] = $items[$order['id']] ?? [];
+                }
+            }
+            unset($g, $order);
+        }
+
         return array_values($grouped);
+    }
+
+    private function fetchOrderItems(array $orderIds): array
+    {
+        $conn = Database::getConnection();
+
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+
+        $stmt = $conn->prepare("
+            SELECT oi.order_id, p.name AS product_name, oi.quantity, oi.unit_price
+            FROM order_items oi
+            INNER JOIN products p ON p.id = oi.product_id
+            WHERE oi.order_id IN ($placeholders)
+            ORDER BY oi.id ASC
+        ");
+        $stmt->execute($orderIds);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int) $row['order_id']][] = [
+                'product_name' => $row['product_name'],
+                'quantity'     => (int) $row['quantity'],
+                'unit_price'   => (float) $row['unit_price'],
+            ];
+        }
+
+        return $map;
     }
 }
