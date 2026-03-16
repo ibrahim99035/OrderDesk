@@ -48,6 +48,7 @@ Route::post("admin/categories/update/{id}" , [categoryController::class , "updat
 Route::get('/admin/checks', [CheckController::class, 'index'], [AdminMiddleware::class]);
 
 
+
 // user 
 Route::get("product" , [UserProudectController::class , "index"] , [AuthMiddleware::class]);
 
@@ -90,4 +91,3 @@ Route::post("/orders/cancel",          [OrderController::class, 'cancelOrder']);
 
 // ✅ {id} last
 Route::get("/orders/my/{id}",          [OrderController::class, 'showMyOrder']);
-
