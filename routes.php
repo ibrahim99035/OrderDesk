@@ -9,6 +9,7 @@ use App\controllers\categoryController;
 use App\controllers\OrderController;
 use App\controllers\HomeController;
 use App\controllers\UserProudectController;
+use App\controllers\CheckController;
 use App\Middleware\AuthMiddleware;
 
 // Authentication
@@ -43,6 +44,8 @@ Route::get("admin/categories" , [categoryController::class , "index"] ,  [AdminM
 Route::post("admin/categories" , [categoryController::class , "store"] ,  [AdminMiddleware::class]) ;
 Route::post("admin/categories/delete/{id}" , [categoryController::class , "delete"] , [AdminMiddleware::class] ) ;
 Route::post("admin/categories/update/{id}" , [categoryController::class , "update"] ,  [AdminMiddleware::class]) ;
+
+Route::get('/admin/checks', [CheckController::class, 'index'], [AdminMiddleware::class]);
 
 
 // user 
@@ -87,5 +90,4 @@ Route::post("/orders/cancel",          [OrderController::class, 'cancelOrder']);
 
 // ✅ {id} last
 Route::get("/orders/my/{id}",          [OrderController::class, 'showMyOrder']);
-
 

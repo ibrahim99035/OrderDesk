@@ -137,18 +137,7 @@ class OrderRepository
 
         return $map;
     }
-}
 
-<?php
-
-namespace App\repositories;
-
-use App\core\Database;
-use PDO;
-
-class OrderRepository
-{
-    // Get the latest order for a specific user
     public function latestByUser(int $userId): ?array
     {
         $conn = Database::getConnection();
