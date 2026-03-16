@@ -16,11 +16,14 @@ class CheckController extends Controller
 
     public function index(): void
     {
+        $userId  = (int) $this->get('user_id', 0);
         $users   = $this->fetchUsers();
-        $results = $this->fetchChecks();
+        $results = $this->fetchChecks($userId);
 
         $this->render('admin/checks', [
             'current' => 'checks',
+            'users'   => $users,
+            'userId'  => $userId,
             'results' => $results,
         ]);
     }
@@ -40,7 +43,7 @@ class CheckController extends Controller
     }
 
  
-    private function fetchChecks(): array
+    private function fetchChecks(int $userId = 0): array
     {
         $conn = Database::getConnection();
 
@@ -53,11 +56,19 @@ class CheckController extends Controller
                 u.name AS user_name
             FROM orders o
             INNER JOIN users u ON u.id = o.user_id
-            ORDER BY u.name ASC, o.created_at DESC
         ";
 
+        $params = [];
+
+        if ($userId > 0) {
+            $sql .= " WHERE o.user_id = :user_id";
+            $params['user_id'] = $userId;
+        }
+
+        $sql .= " ORDER BY u.name ASC, o.created_at DESC";
+
         $stmt = $conn->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $grouped = [];

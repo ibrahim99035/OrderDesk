@@ -10,6 +10,32 @@
             </p>
         </div>
 
+        <!-- Filter Form -->
+        <form method="GET" action="<?= BASE_URL ?>/admin/checks" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm mb-8">
+            <div class="flex flex-wrap items-end gap-4">
+                <div class="flex-1 min-w-[200px]">
+                    <label for="user_id" class="block text-sm font-medium mb-2">Employee</label>
+                    <select name="user_id" id="user_id" class="w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-4 py-3">
+                        <option value="0">All employees</option>
+                        <?php foreach ($users as $user): ?>
+                            <option value="<?= (int) $user['id'] ?>" <?= $userId === (int) $user['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($user['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-semibold transition-colors">
+                        Filter
+                    </button>
+                    <a href="<?= BASE_URL ?>/admin/checks" class="rounded-xl border border-gray-300 dark:border-gray-600 px-6 py-3 font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+
         <!-- Results Table -->
         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
 
@@ -32,7 +58,6 @@
                             <tr class="border-t border-gray-200 dark:border-gray-700">
                                 <td colspan="3" class="p-0">
 
-                                    <!-- Expandable row using <details> -->
                                     <details class="group">
                                         <summary class="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors list-none">
                                             <span class="font-medium">
@@ -46,14 +71,12 @@
                                                 <span class="font-bold text-blue-600 dark:text-blue-400">
                                                     <?= number_format($user['user_total'], 2) ?> EGP
                                                 </span>
-                                                <!-- Arrow icon -->
                                                 <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                                                 </svg>
                                             </span>
                                         </summary>
 
-                                        <!-- Expanded order details -->
                                         <div class="bg-gray-50 dark:bg-gray-900/40 px-6 pb-4">
                                             <table class="w-full text-xs">
                                                 <thead>
