@@ -19,6 +19,7 @@ OrderDesk is a custom-built PHP web application designed for managing orders, pr
 ## Environment
 
 ```.env
+# Sorry the account got terminated, please create a local database and fill the .env
 DB_HOST=sql.freedb.tech
 DB_NAME=freedb_OrderDesk
 DB_USER=freedb_OrderDeskITI
