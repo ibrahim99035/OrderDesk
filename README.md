@@ -1,57 +1,86 @@
 # OrderDesk
 
-OrderDesk is a custom-built PHP web application designed for managing orders, products, and users. It follows a clean Model-View-Controller (MVC) architecture and provides a robust administrative interface for managing a cafeteria or small restaurant-like environment.
+OrderDesk is a custom-built PHP web application for managing orders, products and users in a
+cafeteria / small-restaurant setting. It follows a clean **MVC** architecture with a repository
+pattern and role-based access.
 
 ## Team
-> Group Effort: Building the database, building the Architecture, Repositories and Middlewares
 
-### Ahmed Tarek
-#### Checks Management
-### Ibrahim Mohamed Eita
-#### User Management
-### Maryam Abdelrheem Elkhwaga
-#### Home Pages Management
-### Mohamed Ahmed Halawa
-#### Product Management
-### Mohamed Tarek Kandil 
-#### Order Management
+> Group effort: database, architecture, repositories and middlewares
 
-## Environment
+- **Ahmed Tarek** — Checks management
+- **Ibrahim Mohamed Eita** — User management
+- **Maryam Abdelrheem Elkhwaga** — Home pages management
+- **Mohamed Ahmed Halawa** — Product management
+- **Mohamed Tarek Kandil** — Order management
 
-```.env
-# Sorry the account got terminated, please create a local database and fill the .env
-DB_HOST=sql.freedb.tech
-DB_NAME=freedb_OrderDesk
-DB_USER=freedb_OrderDeskITI
-DB_PASS=c**?x3!GNV&tb37
-```
-Stand on the root directory on any terminal, Install the required packages and run:
+---
+
+## Tech stack
+
+- **Backend:** PHP 8.x (custom MVC framework, built from scratch)
+- **Database:** MySQL **or** SQLite (automatic local fallback)
+- **Frontend:** HTML5, Tailwind CSS, JavaScript
+- **Dependencies:** Composer (`vlucas/phpdotenv`), PSR-4 autoloading
+- **Security:** session CSRF, BCRYPT password hashing, input sanitization
+
+---
+
+## Setup & run
 
 ```bash
-composer update
+cd OrderDesk
 composer install
 php -S localhost:8080 index.php
 ```
 
-The database deployed and allowes 100 requst per hour
+Open **http://localhost:8080/login**.
 
-### Admin Account
-| Email           | Password   |
-| --------------- | ---------- |
-| admin@admin.com | Admin@1234 |
+### Database
 
-## Core Architecture
-- **Custom MVC Framework:** Built from scratch for learning and flexibility.
-- **PSR-4 Autoloading:** Modern PHP standards for class loading via Composer.
-- **Repository Pattern:** Decoupled database logic for better maintainability.
-- **Custom Routing:** Handles dynamic URLs and HTTP methods.
-- **Security:** CSRF protection (via session), password hashing (BCRYPT), and input sanitization.
+`app/core/Database.php` connects to MySQL when the `DB_*` variables are set in `.env`;
+otherwise it **falls back to a local SQLite file** (`orderdesk.sqlite`) and auto-creates the
+schema from `schema.sqlite`. The app therefore runs locally with **no MySQL server** required.
 
-## Tech Stack
-- **Backend:** PHP 8.x
-- **Database:** MySQL
-- **Frontend:** HTML5, TailwindCSS, JavaScript
-- **Dependency Management:** Composer
-- **Environment Management:** `vlucas/phpdotenv`
+`.env` (all optional — leave the `DB_*` values empty to use the SQLite fallback):
 
+```dotenv
+APP_NAME=OrderDesk
+APP_URL=http://localhost
 
+# Optional MySQL (leave DB_HOST empty to use local SQLite)
+DB_HOST=
+DB_NAME=
+DB_USER=
+DB_PASS=
+```
+
+---
+
+## Admin account
+
+Login: **http://localhost:8080/login**
+
+| Email            | Password    |
+|------------------|-------------|
+| `admin@admin.com`| `Admin@1234`|
+
+> The `INSERT`s in `seed.sql` are commented out, so a fresh SQLite database starts with **no users**.
+> Create the admin account once (run this from the project root, after the first request has
+> created `orderdesk.sqlite`):
+>
+> ```bash
+> php -r '$d=new PDO("sqlite:orderdesk.sqlite");$d->exec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,email TEXT UNIQUE,password TEXT,role TEXT DEFAULT \"user\",room_id INTEGER,extension TEXT,image TEXT,is_active INTEGER DEFAULT 1,created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");$h=password_hash("Admin@1234",PASSWORD_BCRYPT);$s=$d->prepare("INSERT OR IGNORE INTO users (name,email,password,role,is_active) VALUES (?,?,?,\"admin\",1)");$s->execute(["Super Admin","admin@admin.com",$h]);echo "admin ready\n";'
+> ```
+
+Roles: `user` (regular customer), `admin` (full access), plus an office-boy flow for deliveries.
+
+---
+
+## Core architecture
+
+- **Custom MVC framework** — built from scratch for learning and flexibility
+- **PSR-4 autoloading** via Composer
+- **Repository pattern** to decouple database logic
+- **Custom routing** handling dynamic URLs and HTTP methods
+- **Middleware** for auth (`AuthMiddleware`) and admin (`AdminMiddleware`)
